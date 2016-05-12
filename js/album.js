@@ -5,11 +5,14 @@
 (function(window) {
     'use strict';
     /**
-     * @description 相册类
+     * 相册类
      * @constructor
      */
     function Album() {
-        // 布局的枚举类型
+        /**
+         * 布局类型
+         * @type {{PUZZLE: Symbol, WATERFALL: Symbol, BARREL: Symbol}}
+         */
         this.LAYOUT = {
             PUZZLE: Symbol('PUZZLE'),    // 拼图布局
             WATERFALL: Symbol('WATERFALL'), // 瀑布布局
@@ -17,14 +20,31 @@
         };
     }
 
-    let layout;  //布局类型
+    /**
+     * 布局类型
+     * @type LAYOUT
+     */
+    let _layout;
+    /**
+     * 图片加载完成回调函数
+     * @type Function
+     */
+    let _imageLoadCallback;
+    /**
+     * 相册中图片集合
+     * @type string[]
+     */
+    let _elements = [];
 
     /************* 以下是本库提供的公有方法 *************/
     /**
      * 初始化并设置相册
      * 当相册原本包含图片时，该方法会替换原有图片
      * @param {(string|string[])} image  一张图片的 URL 或多张图片 URL 组成的数组
-     * @param {{layout?: LAYOUT}}            option 配置项
+     * @param {{
+     *   layout?: LAYOUT,
+     *   imageLoadCallback?: Function
+     * }} option 配置项
      */
     Album.prototype.setImage = function(image, option) {
         if(!(image instanceof Array)) {
@@ -35,7 +55,13 @@
             option = {};
         }
         //布局
-        layout = option.layout ? option.layout : this.LAYOUT.WATERFALL;
+        if(Object.values) {  //Firefox
+            _layout = Object.values(this.LAYOUT).includes(option.layout) ? option.layout : this.LAYOUT.WATERFALL;
+        } if(window.values) {  //Chrome
+            _layout = window.values(this.LAYOUT).includes(option.layout) ? option.layout : this.LAYOUT.WATERFALL;
+        }
+        //缓冲区图片加载完成回调函数
+        _imageLoadCallback = option.imageLoadCallback instanceof Function ? option.imageLoadCallback : undefined;
         //移除所有图片
         this.removeImage(this.getImageDomElements());
         //添加图片
@@ -48,6 +74,7 @@
      * @return {HTMLElement[]} 相册所有图像对应的 DOM 元素组成的数组
      */
     Album.prototype.getImageDomElements = function() {
+        return Array.from(_elements);
     };
 
     /**
@@ -58,6 +85,13 @@
     Album.prototype.addImage = function(image) {
         if(!(image instanceof Array)) {
             return this.addImage([image]);
+        }
+        for(let i of image) {
+            let img = new Image();
+            img.src = i;
+            img.onload = () => {
+                _elements[_elements.length] = img;
+            };
         }
     };
 
