@@ -83,7 +83,7 @@
     /**
      * 初始化并设置相册
      * 当相册原本包含图片时，该方法会替换原有图片
-     * @param {(string|string[])} image  一张图片的 URL 或多张图片 URL 组成的数组
+     * @param {string|string[]} image  一张图片的 URL 或多张图片 URL 组成的数组
      * @param {{
      *   layout?: LAYOUT,
      *   fullScreen?: FULL_SCREEN,
@@ -118,7 +118,6 @@
 
     /**
      * 获取相册所有图像对应的 DOM 元素
-     * 可以不是 ，而是更外层的元素
      * @return {HTMLElement[]} 相册所有图像对应的 DOM 元素组成的数组
      */
     Album.prototype.getImageDomElements = function() {
@@ -128,7 +127,7 @@
     /**
      * 向相册添加图片
      * 在拼图布局下，根据图片数量重新计算布局方式；其他布局下向尾部追加图片
-     * @param {(string|string[])} image 一张图片的 URL 或多张图片 URL 组成的数组
+     * @param {string|string[]} image 一张图片的 URL 或多张图片 URL 组成的数组
      */
     Album.prototype.addImage = function(image) {
         if(!(image instanceof Array)) {
@@ -145,7 +144,7 @@
 
     /**
      * 移除相册中的图片
-     * @param  {(HTMLElement|HTMLElement[])} image 需要移除的图片
+     * @param  {HTMLElement|HTMLElement[]} image 需要移除的图片
      * @return {boolean} 是否全部移除成功
      */
     Album.prototype.removeImage = function(image) {
@@ -268,8 +267,6 @@
             max: _barrelHeight[1]
         };
     };
-
-    // 你想增加的其他接口
 
     /************* 以上是本库提供的公有方法 *************/
 
