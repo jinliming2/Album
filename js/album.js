@@ -6,35 +6,72 @@
     'use strict';
     /**
      * 相册类
+     * @param {string|HTMLElement} id
      * @constructor
      */
-    function Album() {
+    function Album(id) {
+        //容器
+        if(typeof id === "string") {
+            _container = document.getElementById(id);
+        } else {
+            _container = id;
+        }
         /**
          * 布局类型
          * @type {{PUZZLE: Symbol, WATERFALL: Symbol, BARREL: Symbol}}
          */
         this.LAYOUT = {
-            PUZZLE: Symbol('PUZZLE'),    // 拼图布局
-            WATERFALL: Symbol('WATERFALL'), // 瀑布布局
-            BARREL: Symbol('BARREL')     // 木桶布局
+            PUZZLE: Symbol('PUZZLE'),        // 拼图布局
+            WATERFALL: Symbol('WATERFALL'),  // 瀑布布局
+            BARREL: Symbol('BARREL')         // 木桶布局
+        };
+        /**
+         * 全屏模式
+         * @type {{NONE: Symbol, PAGE: Symbol, WINDOW: Symbol}}
+         */
+        this.FULL_SCREEN = {
+            NONE: Symbol('DISABLE_FULL_SCREEN'),  //关闭全屏显示
+            PAGE: Symbol('PAGE_FULL_SCREEN'),     //页面内全屏显示
+            WINDOW: Symbol('WINDOW_FULL_SCREEN')  //窗口全屏显示
         };
     }
 
     /**
+     * 布局容器
+     * @type {HTMLElement}
+     * @private
+     */
+    let _container;
+    /**
      * 布局类型
-     * @type LAYOUT
+     * @type {LAYOUT}
+     * @private
      */
     let _layout;
     /**
      * 图片加载完成回调函数
-     * @type Function
+     * @type {Function}
+     * @private
      */
     let _imageLoadCallback;
     /**
      * 相册中图片集合
-     * @type string[]
+     * @type {string[]}
+     * @private
      */
     let _elements = [];
+    /**
+     * 图片间隔[X, Y]
+     * @type {number[]}
+     * @private
+     */
+    let _gutter = [0, 0];
+    /**
+     * 点击全屏浏览
+     * @type {FULL_SCREEN}
+     * @private
+     */
+    let _fullScreen;
 
     /************* 以下是本库提供的公有方法 *************/
     /**
@@ -43,8 +80,9 @@
      * @param {(string|string[])} image  一张图片的 URL 或多张图片 URL 组成的数组
      * @param {{
      *   layout?: LAYOUT,
+     *   fullScreen: FULL_SCREEN,
      *   imageLoadCallback?: Function
-     * }} option 配置项
+     * }} [option] 配置项
      */
     Album.prototype.setImage = function(image, option) {
         if(!(image instanceof Array)) {
@@ -55,11 +93,9 @@
             option = {};
         }
         //布局
-        if(Object.values) {  //Firefox
-            _layout = Object.values(this.LAYOUT).includes(option.layout) ? option.layout : this.LAYOUT.WATERFALL;
-        } if(window.values) {  //Chrome
-            _layout = window.values(this.LAYOUT).includes(option.layout) ? option.layout : this.LAYOUT.WATERFALL;
-        }
+        this.setLayout(option.layout);
+        //全屏显示
+        this.setFullScreen(option.fullScreen);
         //缓冲区图片加载完成回调函数
         _imageLoadCallback = option.imageLoadCallback instanceof Function ? option.imageLoadCallback : undefined;
         //移除所有图片
@@ -90,7 +126,7 @@
             let img = new Image();
             img.src = i;
             img.onload = () => {
-                _elements[_elements.length] = img;
+                _elements.push(img);
             };
         }
     };
@@ -104,20 +140,33 @@
         if(!(image instanceof Array)) {
             return this.removeImage([image]);
         }
+        for(let i of image) {
+            let index = _elements.indexOf(i);
+            if(index >= 0) {
+                _elements.splice(index, 1);
+            }
+        }
     };
 
     /**
      * 设置相册的布局
-     * @param {number} layout 布局值，IfeAlbum.LAYOUT 中的值
+     * @param {LAYOUT} layout 布局，Album.LAYOUT 中的值
      */
     Album.prototype.setLayout = function(layout) {
+        if(Object.values) {  //Firefox
+            _layout = Object.values(this.LAYOUT).includes(layout) ? layout : this.LAYOUT.WATERFALL;
+        }
+        if(window.values) {  //Chrome
+            _layout = window.values(this.LAYOUT).includes(layout) ? layout : this.LAYOUT.WATERFALL;
+        }
     };
 
     /**
      * 获取相册的布局
-     * @return {number} 布局枚举类型的值
+     * @return {LAYOUT} 布局
      */
     Album.prototype.getLayout = function() {
+        return _layout;
     };
 
     /**
@@ -128,53 +177,36 @@
      * @param {number} [y] 图片之间的纵向间距，如果是 undefined 则等同于 x
      */
     Album.prototype.setGutter = function(x, y) {
-    };
-
-    /**
-     * 允许点击图片时全屏浏览图片
-     */
-    Album.prototype.enableFullscreen = function() {
-    };
-
-    /**
-     * 禁止点击图片时全屏浏览图片
-     */
-    Album.prototype.disableFullscreen = function() {
-    };
-
-    /**
-     * 获取点击图片时全屏浏览图片是否被允许
-     * @return {boolean} 是否允许全屏浏览
-     */
-    Album.prototype.isFullscreenEnabled = function() {
-    };
-
-    /**
-     * 设置木桶模式每行图片数的上下限
-     * @param {number} min 最少图片数（含）
-     * @param {number} max 最多图片数（含）
-     */
-    Album.prototype.setBarrelBin = function(min, max) {
-        // 注意异常情况的处理，做一个健壮的库
-        if(min === undefined || max === undefined || min > max) {
-            console.error('...');
+        if(!Number.isInteger(x)) {
             return;
         }
-        // 你的实现
+        _gutter[0] = x;
+        if(Number.isInteger(y)) {
+            _gutter[1] = y;
+        } else {
+            _gutter[1] = x;
+        }
     };
 
     /**
-     * 获取木桶模式每行图片数的上限
-     * @return {number} 最多图片数（含）
+     * 点击图片时全屏浏览图片模式
+     * @param {FULL_SCREEN} mode 全屏模式
      */
-    Album.prototype.getBarrelBinMax = function() {
+    Album.prototype.setFullScreen = function(mode) {
+        if(Object.values) {  //Firefox
+            _fullScreen = Object.values(this.FULL_SCREEN).includes(mode) ? mode : this.FULL_SCREEN.NONE;
+        }
+        if(window.values) {  //Chrome
+            _fullScreen = window.values(this.FULL_SCREEN).includes(mode) ? mode : this.FULL_SCREEN.NONE;
+        }
     };
 
     /**
-     * 获取木桶模式每行图片数的下限
-     * @return {number} 最少图片数（含）
+     * 获取点击图片时全屏浏览图片模式
+     * @returns {FULL_SCREEN} 全屏模式
      */
-    Album.prototype.getBarrelBinMin = function() {
+    Album.prototype.getsetFullScreen = function() {
+        return _fullScreen;
     };
 
     /**
@@ -190,7 +222,6 @@
      * @return {number} 最多图片数（含）
      */
     Album.prototype.getBarrelHeightMax = function() {
-
     };
 
     /**
@@ -207,6 +238,8 @@
     // 实例化
     if(typeof window.Album === 'undefined') {
         // 只有当未初始化时才实例化
-        window.Album = new Album();
+        window.Album = function(id) {
+            return new Album(id);
+        };
     }
 }(window));
