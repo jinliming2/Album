@@ -72,6 +72,12 @@
      * @private
      */
     let _fullScreen;
+    /**
+     * 木桶布局高度限制
+     * @type {number[]}
+     * @private
+     */
+    let _barrelHeight = [0, 0];
 
     /************* 以下是本库提供的公有方法 *************/
     /**
@@ -80,7 +86,9 @@
      * @param {(string|string[])} image  一张图片的 URL 或多张图片 URL 组成的数组
      * @param {{
      *   layout?: LAYOUT,
-     *   fullScreen: FULL_SCREEN,
+     *   fullScreen?: FULL_SCREEN,
+     *   gutter?: {x: number, y: number},
+     *   barrelHeight?: {min: number, max: number},
      *   imageLoadCallback?: Function
      * }} [option] 配置项
      */
@@ -96,6 +104,10 @@
         this.setLayout(option.layout);
         //全屏显示
         this.setFullScreen(option.fullScreen);
+        //图片间距
+        this.setGutter(option.gutter.x, option.gutter.y);
+        //木桶模式每行高度
+        this.setBarrelHeight(option.barrelHeight.min, option.barrelHeight.max);
         //缓冲区图片加载完成回调函数
         _imageLoadCallback = option.imageLoadCallback instanceof Function ? option.imageLoadCallback : undefined;
         //移除所有图片
@@ -171,8 +183,6 @@
 
     /**
      * 设置图片之间的间距
-     * 注意这个值仅代表图片间的间距，不应直接用于图片的 margin 属性，如左上角图的左边和上边应该紧贴相册的左边和上边
-     * 相册本身的 padding 始终是 0，用户想修改相册外框的空白需要自己设置相框元素的 padding
      * @param {number}  x  图片之间的横向间距
      * @param {number} [y] 图片之间的纵向间距，如果是 undefined 则等同于 x
      */
@@ -181,11 +191,7 @@
             return;
         }
         _gutter[0] = x;
-        if(Number.isInteger(y)) {
-            _gutter[1] = y;
-        } else {
-            _gutter[1] = x;
-        }
+        _gutter[1] = Number.isInteger(y) ? y : x;
     };
 
     /**
@@ -215,20 +221,21 @@
      * @param {number} max 最大高度
      */
     Album.prototype.setBarrelHeight = function(min, max) {
+        if(!Number.isInteger(min) || !Number.isInteger(max)) {
+            return;
+        }
+        _barrelHeight = [min, max];
     };
 
     /**
-     * 获取木桶模式每行高度的上限
-     * @return {number} 最多图片数（含）
+     * 获取木桶模式每行高度
+     * @returns {{min: number, max: number}}
      */
     Album.prototype.getBarrelHeightMax = function() {
-    };
-
-    /**
-     * 获取木桶模式每行高度的下限
-     * @return {number} 最少图片数（含）
-     */
-    Album.prototype.getBarrelHeightMin = function() {
+        return {
+            min: _barrelHeight[0],
+            max: _barrelHeight[1]
+        };
     };
 
     // 你想增加的其他接口
