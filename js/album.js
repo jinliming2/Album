@@ -165,11 +165,21 @@
      * @param {LAYOUT} layout 布局，Album.LAYOUT 中的值
      */
     Album.prototype.setLayout = function(layout) {
-        if(Object.values) {  //Firefox
-            _layout = Object.values(this.LAYOUT).includes(layout) ? layout : this.LAYOUT.WATERFALL;
-        }
+        //noinspection JSUnresolvedVariable
         if(window.values) {  //Chrome
+            //noinspection JSUnresolvedFunction
             _layout = window.values(this.LAYOUT).includes(layout) ? layout : this.LAYOUT.WATERFALL;
+        } else if(Object.values) {  //Firefox
+            _layout = Object.values(this.LAYOUT).includes(layout) ? layout : this.LAYOUT.WATERFALL;
+        } else {
+            for(let l in this.LAYOUT) {
+                if(this.LAYOUT.hasOwnProperty(l) && layout === this.LAYOUT[l]) {
+                    _layout = layout;
+                    return;
+                }
+            }
+            //noinspection JSValidateTypes
+            _layout = this.LAYOUT.WATERFALL;
         }
     };
 
@@ -195,15 +205,36 @@
     };
 
     /**
+     * 获取图片间距
+     * @returns {{x: number, y: number}} 横向与纵向间距
+     */
+    Album.prototype.getGutter = function() {
+        return {
+            x: _gutter[0],
+            y: _gutter[1]
+        };
+    };
+
+    /**
      * 点击图片时全屏浏览图片模式
      * @param {FULL_SCREEN} mode 全屏模式
      */
     Album.prototype.setFullScreen = function(mode) {
-        if(Object.values) {  //Firefox
-            _fullScreen = Object.values(this.FULL_SCREEN).includes(mode) ? mode : this.FULL_SCREEN.NONE;
-        }
+        //noinspection JSUnresolvedVariable
         if(window.values) {  //Chrome
+            //noinspection JSUnresolvedFunction
             _fullScreen = window.values(this.FULL_SCREEN).includes(mode) ? mode : this.FULL_SCREEN.NONE;
+        } else if(Object.values) {  //Firefox
+            _fullScreen = Object.values(this.FULL_SCREEN).includes(mode) ? mode : this.FULL_SCREEN.NONE;
+        } else {
+            for(let fs in this.FULL_SCREEN) {
+                if(this.FULL_SCREEN.hasOwnProperty(fs) && mode === this.FULL_SCREEN[fs]) {
+                    _fullScreen = mode;
+                    return;
+                }
+            }
+            //noinspection JSValidateTypes
+            _fullScreen = this.FULL_SCREEN.NONE;
         }
     };
 
@@ -229,7 +260,7 @@
 
     /**
      * 获取木桶模式每行高度
-     * @returns {{min: number, max: number}}
+     * @returns {{min: number, max: number}} 每行高度范围
      */
     Album.prototype.getBarrelHeightMax = function() {
         return {
