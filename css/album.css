@@ -1,0 +1,31 @@
+/** 拼图布局 */
+.puzzle {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-flow: row nowrap;
+    flex-flow: row nowrap;
+    -webkit-justify-content: space-around;
+    justify-content: space-around;
+    -webkit-align-items: stretch;
+    align-items: stretch;
+}
+
+.puzzle img {
+    float: right;
+}
+
+.puzzle-1 img {
+    width: 100%;
+    height: 100%;
+}
+
+.puzzle-2 img {
+    width: 66.666%;
+    height: 100%;
+}
+
+.puzzle-2 div:last-child {
+    width: 100%;
+    margin-left: -66.666%;
+    clip-path: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMCIgaGVpZ2h0PSIwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPg0KICAgIDxjbGlwUGF0aCBpZD0iY2xpcCIgY2xpcFBhdGhVbml0cz0ib2JqZWN0Qm91bmRpbmdCb3giPg0KICAgICAgICA8cG9seWdvbiBwb2ludHM9IjAuNjY2IDAsMSAwLDEgMSwwLjMzMyAxIj4NCiAgICAgICAgPC9wb2x5Z29uPg0KICAgIDwvY2xpcFBhdGg+DQo8L3N2Zz4=#clip);
+}

@@ -6,19 +6,15 @@
     'use strict';
     /**
      * 相册类
-     * @param {string|HTMLElement} id
+     * @param {string|HTMLElement} id 容器ID
      * @constructor
      */
     function Album(id) {
         //容器
-        if(typeof id === "string") {
-            _container = document.getElementById(id);
-        } else {
-            _container = id;
-        }
+        _container = Container(id);
         /**
          * 布局类型
-         * @type {{PUZZLE: Symbol, WATERFALL: Symbol, BARREL: Symbol}}
+         * @type {{PUZZLE: LAYOUT, WATERFALL: LAYOUT, BARREL: LAYOUT}}
          */
         this.LAYOUT = {
             PUZZLE: Symbol('PUZZLE'),        // 拼图布局
@@ -27,7 +23,7 @@
         };
         /**
          * 全屏模式
-         * @type {{NONE: Symbol, PAGE: Symbol, WINDOW: Symbol}}
+         * @type {{NONE: FULL_SCREEN, PAGE: FULL_SCREEN, WINDOW: FULL_SCREEN}}
          */
         this.FULL_SCREEN = {
             NONE: Symbol('DISABLE_FULL_SCREEN'),  //关闭全屏显示
@@ -38,7 +34,7 @@
 
     /**
      * 布局容器
-     * @type {HTMLElement}
+     * @type {Container}
      * @private
      */
     let _container;
@@ -56,7 +52,7 @@
     let _imageLoadCallback;
     /**
      * 相册中图片集合
-     * @type {string[]}
+     * @type {Image[]}
      * @private
      */
     let _elements = [];
@@ -78,6 +74,77 @@
      * @private
      */
     let _barrelHeight = [0, 0];
+
+    /**
+     * 拼图布局
+     */
+    let puzzle = function() {
+        //清空容器
+        _container.clearChildren();
+        //设置拼图布局
+        _container
+            .removeClass("waterfall")
+            .removeClass("barrel")
+            .addClass("puzzle")
+            .removeClass("puzzle-1")
+            .removeClass("puzzle-2")
+            .removeClass("puzzle-3")
+            .removeClass("puzzle-4")
+            .removeClass("puzzle-5")
+            .removeClass("puzzle-6");
+        //根据图片数目进行对应布局
+        switch(_elements.length) {
+            //没有图片
+            case 0:
+                return;
+                break;
+            //一张图片
+            case 1:
+            {
+                //一张图片布局
+                _container.addClass("puzzle-1");
+                _container.appendImage(_elements[0]);
+            }
+                break;
+            //两张图片
+            case 2:
+            {
+                //两张图片布局
+                _container.addClass("puzzle-2");
+                _container.appendImage(_elements[0]);
+                _container.appendImage(_elements[1]);
+            }
+                break;
+            //三张图片
+            case 3:
+            {
+                //三张图片布局
+                _container.addClass("puzzle-3");
+            }
+                break;
+            //四张图片
+            case 4:
+            {
+                //四张图片布局
+                _container.addClass("puzzle-4");
+            }
+                break;
+            //五张图片
+            case 5:
+            {
+                //五张图片布局
+                _container.addClass("puzzle-5");
+            }
+                break;
+            //大于等于六张图片，只取前六张
+            default:
+            {
+                //六张图片布局
+                _container.addClass("puzzle-6");
+            }
+                break;
+        }
+    };
 
     /************* 以下是本库提供的公有方法 *************/
     /**
@@ -270,9 +337,102 @@
 
     /************* 以上是本库提供的公有方法 *************/
 
+    /**
+     * 容器类
+     * @param id
+     */
+    function Container(id) {
+        /**
+         * 容器类
+         * @param {string|HTMLElement} id 容器ID
+         * @constructor
+         */
+        function Container(id) {
+            //容器
+            if(typeof id === "string") {
+                _container = document.getElementById(id);
+            } else {
+                _container = id;
+            }
+        }
+
+        /**
+         * 容器
+         * @type {HTMLElement}
+         * @private
+         */
+        let _container;
+
+        /**
+         * 是否存在class
+         * @param {string} cls 类名
+         * @returns {boolean}
+         */
+        Container.prototype.hasClass = function(cls) {
+            return _container.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)')) !== null;
+        };
+
+        /**
+         * 添加class
+         * @param {string} cls 类名
+         * @returns {Container} 当前链式调用对象
+         */
+        Container.prototype.addClass = function(cls) {
+            if(!this.hasClass(cls)) {
+                _container.className += " " + cls
+            }
+            return this;
+        };
+
+        /**
+         * 删除class
+         * @param {string} cls 类名
+         * @returns {Container} 当前链式调用对象
+         */
+        Container.prototype.removeClass = function(cls) {
+            if(this.hasClass(cls)) {
+                let reg = new RegExp('(\\s|^)' + cls + '(\\s|$)', 'g');
+                _container.className = _container.className
+                    .replace(reg, ' ')
+                    .replace(/(^ +)|( +$)/g, '')
+                    .replace(/(  +)/g, ' ');
+            }
+            return this;
+        };
+
+        /**
+         * 清空元素
+         * @returns {Container} 当前链式调用对象
+         */
+        Container.prototype.clearChildren = function() {
+            _container.innerHTML = "";
+            return this;
+        };
+
+        /**
+         * 追加图片节点
+         * @param {Image} image 图片节点
+         * @returns {HTMLElement} 图片容器
+         */
+        Container.prototype.appendImage = function(image) {
+            let div = document.createElement("div");
+            div.appendChild(image);
+            _container.appendChild(div);
+            return div;
+        };
+
+        return new Container(id);
+    }
+
     // 实例化
     if(typeof window.Album === 'undefined') {
         // 只有当未初始化时才实例化
+        /**
+         * 相册类
+         * @param id 容器ID
+         * @returns {Album} 相册对象
+         * @constructor
+         */
         window.Album = function(id) {
             return new Album(id);
         };
