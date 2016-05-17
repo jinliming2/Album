@@ -298,13 +298,17 @@
                     onload.call(this);
                 }
                 if(--_loading == 0) {
-                    _imageLoadCallback.call(this);
+                    if(_imageLoadCallback instanceof Function) {
+                        _imageLoadCallback.call(this);
+                    }
                     update();
                 }
             };
             img.onerror = function() {
                 if(--_loading == 0) {
-                    _imageLoadCallback.call(this);
+                    if(_imageLoadCallback instanceof Function) {
+                        _imageLoadCallback.call(this);
+                    }
                     update();
                 }
             };
