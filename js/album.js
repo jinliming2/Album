@@ -12,6 +12,9 @@
     function Album(id) {
         //容器
         _container = Container(id);
+        //容器尺寸
+        _containerSize[0] = parseFloat(_container.css("width"));
+        _containerSize[1] = parseFloat(_container.css("height"));
         /**
          * 布局类型
          * @type {{PUZZLE: LAYOUT, WATERFALL: LAYOUT, BARREL: LAYOUT}}
@@ -30,6 +33,7 @@
             PAGE: Symbol('PAGE_FULL_SCREEN'),     //页面内全屏显示
             WINDOW: Symbol('WINDOW_FULL_SCREEN')  //窗口全屏显示
         };
+        //内部this指针
         _this = this;
     }
 
@@ -45,6 +49,18 @@
      * @private
      */
     let _container;
+    /**
+     * 容器尺寸[宽度, 高度]
+     * @type {number[]}
+     * @private
+     */
+    let _containerSize = [0, 0];
+    /**
+     * 容器尺寸改变事件监视时钟
+     * @type {number}
+     * @private
+     */
+    let _containerSizeClock = -1;
     /**
      * 布局类型
      * @type {LAYOUT}
@@ -81,6 +97,12 @@
      * @private
      */
     let _barrelHeight = [0, 0];
+    /**
+     * 正在加载的图片数
+     * @type {number}
+     * @private
+     */
+    let _loading = 0;
 
     /**
      * 更新布局显示
@@ -134,11 +156,7 @@
                 //两张图片布局
                 _container.addClass("puzzle-2");
                 _container.appendImage(_elements[0]);
-                let img2 = _container.appendImage(_elements[1]);
-                //Chrome 兼容，固定计算
-                let deg = -Math.atan2(parseInt(_container.css("width")) / 6, parseInt(_container.css("height")) / 2) * 180 / Math.PI;
-                img2.style.webkitMaskImage = "-webkit-linear-gradient(" + deg + "deg, transparent 50%, white 50%)";
-                img2.style.maskImage = "linear-gradient(" + deg + "deg, transparent 50%, white 50%)";
+                _container.appendImage(_elements[1]);
             }
                 break;
             //三张图片
@@ -146,6 +164,13 @@
             {
                 //三张图片布局
                 _container.addClass("puzzle-3");
+                let img1 = _container.appendImage(_elements[0]);
+                let right = _container.appendDiv();
+                let img2 = _container.appendImage(_elements[1], right);
+                let img3 = _container.appendImage(_elements[2], right);
+                let w = _containerSize[1] / 2;
+                img2.style.width = img2.style.height = img3.style.width = img3.style.height = w + "px";
+                img1.style.width = _containerSize[0] - w + "px";
             }
                 break;
             //四张图片
@@ -182,6 +207,7 @@
      *   fullScreen?: FULL_SCREEN,
      *   gutter?: {x: number, y: number},
      *   barrelHeight?: {min: number, max: number},
+     *   sizeChange?: Number,
      *   imageLoadCallback?: Function
      * }} [option] 配置项
      */
@@ -211,6 +237,10 @@
         this.removeImage(this.getImageDomElements());
         //添加图片
         this.addImage(image);
+        //尺寸变化事件
+        if(Number.isInteger(option.sizeChange)) {
+            this.resizeUpdate(option.sizeChange);
+        }
     };
 
     /**
@@ -234,13 +264,21 @@
         }
         let _ret = [];
         for(let i of image) {
+            _loading++;
             let img = new Image();
-            img.onload = () => {
+            img.onload = function() {
                 _elements.push(img);
                 if(onload instanceof Function) {
                     onload.call(this);
                 }
-                update();
+                if(--_loading == 0) {
+                    update();
+                }
+            };
+            img.onerror = function() {
+                if(--_loading == 0) {
+                    update();
+                }
             };
             img.src = i;
             _ret.push(img);
@@ -376,6 +414,33 @@
         };
     };
 
+    /**
+     * 容器尺寸改变监视器
+     * @param {Number} cycle 监视周期（<=0 关闭监视）
+     */
+    Album.prototype.resizeUpdate = function(cycle) {
+        if(_containerSizeClock != -1) {
+            clearInterval(_containerSizeClock);
+        }
+        if(cycle > 0) {
+            _containerSizeClock = setInterval(function() {
+                let w = parseFloat(_container.css("width"));
+                if(w != _containerSize[0]) {
+                    _containerSize[0] = w;
+                    update();
+                    return;
+                }
+                w = parseFloat(_container.css("height"));
+                if(w != _containerSize[1]) {
+                    _containerSize[1] = w;
+                    update();
+                }
+            }, cycle);
+        } else {
+            _containerSizeClock = -1;
+        }
+    };
+
     /************* 以上是本库提供的公有方法 *************/
 
     /**
@@ -458,12 +523,32 @@
         /**
          * 追加图片节点
          * @param {Image} image 图片节点
+         * @param {HTMLElement} [_div] 外部div
          * @returns {HTMLElement} 图片容器
          */
-        Container.prototype.appendImage = function(image) {
+        Container.prototype.appendImage = function(image, _div) {
             let div = document.createElement("div");
             div.appendChild(image);
-            _container.appendChild(div);
+            if(_div) {
+                _div.appendChild(div);
+            } else {
+                _container.appendChild(div);
+            }
+            return div;
+        };
+
+        /**
+         * 追加节点
+         * @param {HTMLElement} [_div] 外部div
+         * @returns {Element} 节点
+         */
+        Container.prototype.appendDiv = function(_div) {
+            let div = document.createElement("div");
+            if(_div) {
+                _div.appendChild(div);
+            } else {
+                _container.appendChild(div);
+            }
             return div;
         };
 
