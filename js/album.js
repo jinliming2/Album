@@ -350,7 +350,6 @@
                     return;
                 }
             }
-            //noinspection JSValidateTypes
             _layout = this.LAYOUT.WATERFALL;
         }
         update();
