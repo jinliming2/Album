@@ -169,7 +169,7 @@
                 let img2 = _container.appendImage(_elements[1], right);
                 let img3 = _container.appendImage(_elements[2], right);
                 let w = _containerSize[1] / 2;
-                img2.style.width = img2.style.height = img3.style.width = img3.style.height = w + "px";
+                img2.style.width = img3.style.width = w + "px";
                 img1.style.width = _containerSize[0] - w + "px";
             }
                 break;
@@ -178,6 +178,12 @@
             {
                 //四张图片布局
                 _container.addClass("puzzle-4");
+                let left = _container.appendDiv();
+                let right = _container.appendDiv();
+                _container.appendImage(_elements[0], left);
+                _container.appendImage(_elements[1], right);
+                _container.appendImage(_elements[2], left);
+                _container.appendImage(_elements[3], right);
             }
                 break;
             //五张图片
@@ -185,6 +191,17 @@
             {
                 //五张图片布局
                 _container.addClass("puzzle-5");
+                let left = _container.appendDiv();
+                _container.appendImage(_elements[0], left);
+                let leftBottom = _container.appendDiv(left);
+                _container.appendImage(_elements[1], leftBottom);
+                _container.appendImage(_elements[2], leftBottom);
+                let right = _container.appendDiv();
+                let img4 = _container.appendImage(_elements[3], right);
+                let img5 = _container.appendImage(_elements[4], right);
+                let w = _containerSize[0] / 3;
+                img4.style.height = w + "px";
+                img5.style.height = _containerSize[1] - w + "px";
             }
                 break;
             //大于等于六张图片，只取前六张
@@ -192,6 +209,15 @@
             {
                 //六张图片布局
                 _container.addClass("puzzle-6");
+                let left = _container.appendDiv();
+                _container.appendImage(_elements[0], left);
+                let leftBottom = _container.appendDiv(left);
+                _container.appendImage(_elements[1], leftBottom);
+                _container.appendImage(_elements[2], leftBottom);
+                let right = _container.appendDiv();
+                _container.appendImage(_elements[3], right);
+                _container.appendImage(_elements[4], right);
+                _container.appendImage(_elements[5], right);
             }
                 break;
         }
@@ -207,7 +233,7 @@
      *   fullScreen?: FULL_SCREEN,
      *   gutter?: {x: number, y: number},
      *   barrelHeight?: {min: number, max: number},
-     *   sizeChange?: Number,
+     *   resizeUpdate?: Number,
      *   imageLoadCallback?: Function
      * }} [option] 配置项
      */
@@ -238,8 +264,8 @@
         //添加图片
         this.addImage(image);
         //尺寸变化事件
-        if(Number.isInteger(option.sizeChange)) {
-            this.resizeUpdate(option.sizeChange);
+        if(Number.isInteger(option.resizeUpdate)) {
+            this.resizeUpdate(option.resizeUpdate);
         }
     };
 
