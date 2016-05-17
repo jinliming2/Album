@@ -30,8 +30,15 @@
             PAGE: Symbol('PAGE_FULL_SCREEN'),     //页面内全屏显示
             WINDOW: Symbol('WINDOW_FULL_SCREEN')  //窗口全屏显示
         };
+        _this = this;
     }
 
+    /**
+     * this对象
+     * @type {Album}
+     * @private
+     */
+    let _this;
     /**
      * 布局容器
      * @type {Container}
@@ -76,6 +83,21 @@
     let _barrelHeight = [0, 0];
 
     /**
+     * 更新布局显示
+     */
+    let update = function() {
+        switch(_layout) {
+            case _this.LAYOUT.PUZZLE:
+                puzzle();
+                break;
+            case _this.LAYOUT.WATERFALL:
+                break;
+            case _this.LAYOUT.BARREL:
+                break;
+        }
+    };
+
+    /**
      * 拼图布局
      */
     let puzzle = function() {
@@ -112,7 +134,11 @@
                 //两张图片布局
                 _container.addClass("puzzle-2");
                 _container.appendImage(_elements[0]);
-                _container.appendImage(_elements[1]);
+                let img2 = _container.appendImage(_elements[1]);
+                //Chrome 兼容，固定计算
+                let deg = -Math.atan2(parseInt(_container.css("width")) / 6, parseInt(_container.css("height")) / 2) * 180 / Math.PI;
+                img2.style.webkitMaskImage = "-webkit-linear-gradient(" + deg + "deg, transparent 50%, white 50%)";
+                img2.style.maskImage = "linear-gradient(" + deg + "deg, transparent 50%, white 50%)";
             }
                 break;
             //三张图片
@@ -172,9 +198,13 @@
         //全屏显示
         this.setFullScreen(option.fullScreen);
         //图片间距
-        this.setGutter(option.gutter.x, option.gutter.y);
+        if(option.gutter) {
+            this.setGutter(option.gutter.x, option.gutter.y);
+        }
         //木桶模式每行高度
-        this.setBarrelHeight(option.barrelHeight.min, option.barrelHeight.max);
+        if(option.barrelHeight) {
+            this.setBarrelHeight(option.barrelHeight.min, option.barrelHeight.max);
+        }
         //缓冲区图片加载完成回调函数
         _imageLoadCallback = option.imageLoadCallback instanceof Function ? option.imageLoadCallback : undefined;
         //移除所有图片
@@ -195,18 +225,27 @@
      * 向相册添加图片
      * 在拼图布局下，根据图片数量重新计算布局方式；其他布局下向尾部追加图片
      * @param {string|string[]} image 一张图片的 URL 或多张图片 URL 组成的数组
+     * @param {Function} [onload] 图片加载回调
+     * @return {Image[]} 添加的图片列表
      */
-    Album.prototype.addImage = function(image) {
+    Album.prototype.addImage = function(image, onload) {
         if(!(image instanceof Array)) {
-            return this.addImage([image]);
+            return this.addImage([image], onload);
         }
+        let _ret = [];
         for(let i of image) {
             let img = new Image();
-            img.src = i;
             img.onload = () => {
                 _elements.push(img);
+                if(onload instanceof Function) {
+                    onload.call(this);
+                }
+                update();
             };
+            img.src = i;
+            _ret.push(img);
         }
+        return _ret.length == 1 ? _ret[0] : _ret;
     };
 
     /**
@@ -224,6 +263,7 @@
                 _elements.splice(index, 1);
             }
         }
+        update();
     };
 
     /**
@@ -247,6 +287,7 @@
             //noinspection JSValidateTypes
             _layout = this.LAYOUT.WATERFALL;
         }
+        update();
     };
 
     /**
@@ -364,12 +405,25 @@
         let _container;
 
         /**
+         * 取元素计算后样式
+         * @param {string} property 样式
+         * @returns {string} 值
+         */
+        let getProperty = function(property) {
+            if(_container.currentStyle) {
+                return obj.currentStyle.getAttribute(property);
+            } else {
+                return getComputedStyle(_container, null).getPropertyValue(property);
+            }
+        };
+
+        /**
          * 是否存在class
          * @param {string} cls 类名
          * @returns {boolean}
          */
         Container.prototype.hasClass = function(cls) {
-            return _container.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)')) !== null;
+            return _container.classList.contains(cls);
         };
 
         /**
@@ -378,9 +432,7 @@
          * @returns {Container} 当前链式调用对象
          */
         Container.prototype.addClass = function(cls) {
-            if(!this.hasClass(cls)) {
-                _container.className += " " + cls
-            }
+            _container.classList.add(cls);
             return this;
         };
 
@@ -390,13 +442,7 @@
          * @returns {Container} 当前链式调用对象
          */
         Container.prototype.removeClass = function(cls) {
-            if(this.hasClass(cls)) {
-                let reg = new RegExp('(\\s|^)' + cls + '(\\s|$)', 'g');
-                _container.className = _container.className
-                    .replace(reg, ' ')
-                    .replace(/(^ +)|( +$)/g, '')
-                    .replace(/(  +)/g, ' ');
-            }
+            _container.classList.remove(cls);
             return this;
         };
 
@@ -419,6 +465,15 @@
             div.appendChild(image);
             _container.appendChild(div);
             return div;
+        };
+
+        /**
+         * 取样式
+         * @param {string} property 样式
+         * @returns {string} 值
+         */
+        Container.prototype.css = function(property) {
+            return getProperty(property);
         };
 
         return new Container(id);
