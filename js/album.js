@@ -280,13 +280,18 @@
             this._waterfallColumns.push(this._container.appendDiv());
             this._water.height.push(0);
         }
-        let width = 1 / this._waterfallColumn * 100;
-        let margin = this._gutter[1] / 2;
+        let gutter = this._gutter[0];
+        let margin = Math.round(this._gutter[0] / 2);
+        let width = (parseInt(this._container.css("width")) - gutter * (this._waterfallColumn - 1)) / this._waterfallColumn;
         this._waterfallColumns.forEach(function(div) {
-            div.style.width = width + "%";
-            div.style.margin = "0 " + Math.round(margin) + "px 0 " + Math.floor(margin) + "px";
+            div.style.width = (width + gutter) + "px";
+            div.style.padding = "0 " + margin + "px 0 " + (gutter - margin) + "px";
         });
-        this._waterfallColumns[0].style.marginLeft = this._waterfallColumns[this._waterfallColumn - 1].style.marginRight = 0;
+        this._waterfallColumns[0].style.paddingLeft = this._waterfallColumns[this._waterfallColumn - 1].style.paddingRight = 0;
+        this._waterfallColumns[0].style.width = (width  + gutter - margin) + "px";
+        this._waterfallColumns[this._waterfallColumn - 1].style.width = (width  + margin) + "px";
+        this._waterfallColumns[0].style.paddingRight = margin + "px";
+        this._waterfallColumns[this._waterfallColumn - 1].style.paddingLeft = (gutter - margin) + "px";
         this._water.lastIndex = -1;
     };
 
@@ -393,8 +398,8 @@
                     if(_this._imageLoadCallback instanceof Function) {
                         _this._imageLoadCallback.call(_this);
                     }
-                    _this._update(CONTROL.Insert);
                 }
+                _this._update(CONTROL.Insert);
             };
             img.onerror = function() {
                 if(--_this._loading == 0) {
@@ -470,6 +475,7 @@
         }
         this._gutter[0] = x;
         this._gutter[1] = Number.isInteger(y) ? y : x;
+        this._update(CONTROL.Update);
     };
 
     /**
@@ -516,12 +522,16 @@
 
     /**
      * 设置瀑布布局列数
-     * @param column
+     * @param column 列数
+     * @return {Boolean}
      */
     Album.prototype.setWaterfallColumn = function(column) {
         if(Number.isInteger(column) && column > 0) {
             this._waterfallColumn = column;
+            this._update(CONTROL.Update);
+            return true;
         }
+        return false;
     };
 
     /**
@@ -542,6 +552,7 @@
             return;
         }
         this._barrelHeight = [min, max];
+        this._update(CONTROL.Update);
     };
 
     /**

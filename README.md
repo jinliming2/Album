@@ -21,7 +21,7 @@
 <link rel="stylesheet" href="./css/album.min.css" />
 <script src="./js/album.js"></script>
 ```
-2. 定义一个div容器，并指定id、宽度和高度。
+2. 定义一个div容器，并指定id、宽度和高度（拼图布局必须指定高度，其他布局不需要）。
 ```html
 <div id="album" style="width: 100%; height: 100%;"></div>
 ```
@@ -44,6 +44,7 @@ obj.setImage("", {
 |layout|布局类型|Album.LAYOUT.PUZZLE<br />Album.LAYOUT.WATERFALL<br />Album.LAYOUT.BARREL|拼图布局<br />瀑布布局<br />木桶布局|Album.LAYOUT.WATERFALL|
 |fullScreen|点击图片全屏|Album.FULL_SCREEN.NONE<br />Album.FULL_SCREEN.PAGE<br />Album.FULL_SCREEN.WINDOW|禁止全屏<br />页面全屏<br />全屏|Album.FULL_SCREEN.NONE|
 |gutter|图片间距|{x: number, y: number}|x：横向间距<br />y：纵向间距|{x: 0, y: 0}|
+|waterfallColumn|瀑布布局列数|Number|瀑布布局列数|4|
 |barrelHeight|木桶布局高度范围|{min: number, max: number}|min：最小高度<br />max：最大高度||
 |resizeUpdate|容器大小改变监听<br />当容器大小改变时重新计算布局|Number|<=0为不监视|不监视|
 |imageLoadCallback|所有图片加载完成回调函数|Function|当队列中的图片加载完成后自动调用的函数|undefined|
@@ -71,3 +72,7 @@ obj.addImage(["./img/example1.jpg", "./img/example2.jpg"]).forEach(function(imag
 ![四张图片](https://github.com/772807886/Album/raw/master/demo/puzzle/puzzle-4.png)
 ![五张图片](https://github.com/772807886/Album/raw/master/demo/puzzle/puzzle-5.png)
 ![六张图片](https://github.com/772807886/Album/raw/master/demo/puzzle/puzzle-6.png)
+
+## WATERFALL 瀑布布局
+
+![瀑布布局](https://github.com/772807886/Album/raw/master/demo/waterfall/waterfall-1.png)
