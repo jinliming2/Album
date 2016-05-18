@@ -80,6 +80,27 @@
          */
         this._fullScreen = this.FULL_SCREEN.NONE;
         /**
+         * 瀑布布局列数
+         * @type {number}
+         * @private
+         */
+        this._waterfallColumn = 4;
+        /**
+         * 瀑布布局列
+         * @type {HTMLElement[]}
+         * @private
+         */
+        this._waterfallColumns = [];
+        /**
+         * 瀑布布局配置
+         * @type {{lastIndex: number, height: number[]}}
+         * @private
+         */
+        this._water = {
+            lastIndex: -1,
+            height: []
+        };
+        /**
          * 木桶布局高度限制
          * @type {number[]}
          * @private
@@ -94,15 +115,36 @@
     }
 
     /**
-     * 更新布局显示
+     * 操作
+     * @type {{Insert: Symbol, Delete: Symbol, Update: Symbol}}
      */
-    let update = function() {
+    let CONTROL = {
+        Insert: Symbol("Insert"),
+        Delete: Symbol("Delete"),
+        Update: Symbol("Update")
+    };
+
+    /**
+     * 更新布局显示
+     * @param {Symbol} control 操作
+     * @private
+     */
+    Album.prototype._update = function(control) {
+        console.log(control);
         switch(this._layout) {
             case this.LAYOUT.PUZZLE:
-                puzzle.call(this);
+                this._puzzle();
                 break;
             case this.LAYOUT.WATERFALL:
-                waterfall.call(this);
+                //noinspection FallThroughInSwitchStatementJS
+                switch(control) {
+                    case CONTROL.Delete:
+                    case CONTROL.Update:
+                        this._waterfallReset();
+                    case CONTROL.Insert:
+                        this._waterfallInsert();
+                        break;
+                }
                 break;
             case this.LAYOUT.BARREL:
                 break;
@@ -111,8 +153,9 @@
 
     /**
      * 拼图布局
+     * @private
      */
-    let puzzle = function() {
+    Album.prototype._puzzle = function() {
         //清空容器
         this._container.clearChildren();
         //设置拼图布局
@@ -214,11 +257,14 @@
     };
 
     /**
-     * 瀑布布局
+     * 瀑布布局重置
+     * @private
      */
-    let waterfall = function() {
+    Album.prototype._waterfallReset = function() {
         //清空容器
         this._container.clearChildren();
+        this._waterfallColumns = [];
+        this._water.height = [];
         //设置瀑布布局
         this._container
             .removeClass("puzzle")
@@ -230,6 +276,37 @@
             .removeClass("puzzle-5")
             .removeClass("puzzle-6")
             .addClass("waterfall");
+        for(let i = 0; i < this._waterfallColumn; i++) {
+            this._waterfallColumns.push(this._container.appendDiv());
+            this._water.height.push(0);
+        }
+        let width = 1 / this._waterfallColumn * 100;
+        let margin = this._gutter[1] / 2;
+        this._waterfallColumns.forEach(function(div) {
+            div.style.width = width + "%";
+            div.style.margin = "0 " + Math.round(margin) + "px 0 " + Math.floor(margin) + "px";
+        });
+        this._waterfallColumns[0].style.marginLeft = this._waterfallColumns[this._waterfallColumn - 1].style.marginRight = 0;
+        this._water.lastIndex = -1;
+    };
+
+    /**
+     * 瀑布布局追加图片
+     * @private
+     */
+    Album.prototype._waterfallInsert = function() {
+        while(this._water.lastIndex < this._elements.length - 1) {
+            this._water.lastIndex++;
+            let min = 0;
+            for(let i = 0; i < this._waterfallColumn; i++) {
+                if(this._water.height[i] < this._water.height[min]) {
+                    min = i;
+                }
+            }
+            this._container.appendImage(this._elements[this._water.lastIndex], this._waterfallColumns[min])
+                .style.marginBottom = this._gutter[1] + "px";
+            this._water.height[min] = parseFloat(this._container.css("height", this._waterfallColumns[min]));
+        }
     };
 
     /************* 以下是本库提供的公有方法 *************/
@@ -241,6 +318,7 @@
      *   layout?: LAYOUT,
      *   fullScreen?: FULL_SCREEN,
      *   gutter?: {x: number, y: number},
+     *   waterfallColumn?: Number,
      *   barrelHeight?: {min: number, max: number},
      *   resizeUpdate?: Number,
      *   imageLoadCallback?: Function
@@ -254,13 +332,15 @@
         if(!(option instanceof Object)) {
             option = {};
         }
-        //布局
-        this.setLayout(option.layout);
         //全屏显示
         this.setFullScreen(option.fullScreen);
         //图片间距
         if(option.gutter) {
             this.setGutter(option.gutter.x, option.gutter.y);
+        }
+        //瀑布布局列数
+        if(Number.isInteger(option.waterfallColumn)) {
+            this.setWaterfallColumn(option.waterfallColumn);
         }
         //木桶模式每行高度
         if(option.barrelHeight) {
@@ -268,6 +348,8 @@
         }
         //缓冲区图片加载完成回调函数
         this._imageLoadCallback = option.imageLoadCallback instanceof Function ? option.imageLoadCallback : undefined;
+        //布局
+        this.setLayout(option.layout);
         //移除所有图片
         this.removeImage(this.getImageDomElements());
         //添加图片
@@ -311,7 +393,7 @@
                     if(_this._imageLoadCallback instanceof Function) {
                         _this._imageLoadCallback.call(_this);
                     }
-                    update.call(_this);
+                    _this._update(CONTROL.Insert);
                 }
             };
             img.onerror = function() {
@@ -319,7 +401,6 @@
                     if(_this._imageLoadCallback instanceof Function) {
                         _this._imageLoadCallback.call(_this);
                     }
-                    update.call(_this);
                 }
             };
             img.src = i;
@@ -343,7 +424,7 @@
                 this._elements.splice(index, 1);
             }
         }
-        update.call(this);
+        this._update(CONTROL.Delete);
     };
 
     /**
@@ -361,12 +442,13 @@
             for(let l in this.LAYOUT) {
                 if(this.LAYOUT.hasOwnProperty(l) && layout === this.LAYOUT[l]) {
                     this._layout = layout;
+                    this._update(CONTROL.Update);
                     return;
                 }
             }
             this._layout = this.LAYOUT.WATERFALL;
         }
-        update.call(this);
+        this._update(CONTROL.Update);
     };
 
     /**
@@ -433,6 +515,24 @@
     };
 
     /**
+     * 设置瀑布布局列数
+     * @param column
+     */
+    Album.prototype.setWaterfallColumn = function(column) {
+        if(Number.isInteger(column) && column > 0) {
+            this._waterfallColumn = column;
+        }
+    };
+
+    /**
+     * 获取瀑布布局列数
+     * @returns {number|*}
+     */
+    Album.prototype.getWaterfallColumn = function() {
+        return this._waterfallColumn;
+    };
+
+    /**
      * 设置木桶模式每行高度的上下限，单位像素
      * @param {number} min 最小高度
      * @param {number} max 最大高度
@@ -469,13 +569,15 @@
                 let w = parseFloat(_this._container.css("width"));
                 if(w != _this._containerSize[0]) {
                     _this._containerSize[0] = w;
-                    update.call(_this);
+                    _this._update(CONTROL.Update);
                     return;
                 }
-                w = parseFloat(_this._container.css("height"));
-                if(w != _this._containerSize[1]) {
-                    _this._containerSize[1] = w;
-                    update.call(_this);
+                if(_this._layout == _this.LAYOUT.PUZZLE) {
+                    w = parseFloat(_this._container.css("height"));
+                    if(w != _this._containerSize[1]) {
+                        _this._containerSize[1] = w;
+                        _this._update(CONTROL.Update);
+                    }
                 }
             }, cycle);
         } else {
@@ -507,13 +609,22 @@
         /**
          * 取元素计算后样式
          * @param {string} property 样式
+         * @param {HTMLElement} [_div] 外部元素
          * @returns {string} 值
          */
-        let getProperty = function(property) {
-            if(this._container.currentStyle) {
-                return obj.currentStyle.getAttribute(property);
+        Container.prototype._getProperty = function(property, _div) {
+            if(_div) {
+                if(_div.currentStyle) {
+                    return _div.currentStyle.getAttribute(property);
+                } else {
+                    return getComputedStyle(_div, null).getPropertyValue(property);
+                }
             } else {
-                return getComputedStyle(this._container, null).getPropertyValue(property);
+                if(this._container.currentStyle) {
+                    return this._container.currentStyle.getAttribute(property);
+                } else {
+                    return getComputedStyle(this._container, null).getPropertyValue(property);
+                }
             }
         };
 
@@ -590,10 +701,15 @@
         /**
          * 取样式
          * @param {string} property 样式
+         * @param {HTMLElement} [_div] 外部元素
          * @returns {string} 值
          */
-        Container.prototype.css = function(property) {
-            return getProperty.call(this, property);
+        Container.prototype.css = function(property, _div) {
+            if(_div) {
+                return this._getProperty(property, _div);
+            } else {
+                return this._getProperty(property);
+            }
         };
 
         return new Container(id);
