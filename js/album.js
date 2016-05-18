@@ -130,7 +130,6 @@
      * @private
      */
     Album.prototype._update = function(control) {
-        console.log(control);
         switch(this._layout) {
             case this.LAYOUT.PUZZLE:
                 this._puzzle();
@@ -261,10 +260,6 @@
      * @private
      */
     Album.prototype._waterfallReset = function() {
-        //清空容器
-        this._container.clearChildren();
-        this._waterfallColumns = [];
-        this._water.height = [];
         //设置瀑布布局
         this._container
             .removeClass("puzzle")
@@ -276,10 +271,18 @@
             .removeClass("puzzle-5")
             .removeClass("puzzle-6")
             .addClass("waterfall");
-        for(let i = 0; i < this._waterfallColumn; i++) {
-            this._waterfallColumns.push(this._container.appendDiv());
-            this._water.height.push(0);
+        //清空容器
+        if(this._water.height.length != this._waterfallColumn) {
+            this._container.clearChildren();
+            this._waterfallColumns = [];
+            this._water.height = [];
+            //重新布局
+            for(let i = 0; i < this._waterfallColumn; i++) {
+                this._waterfallColumns.push(this._container.appendDiv());
+            }
+            this._water.lastIndex = -1;
         }
+        //重新布局
         let gutter = this._gutter[0];
         let margin = Math.round(this._gutter[0] / 2);
         let width = (parseInt(this._container.css("width")) - gutter * (this._waterfallColumn - 1)) / this._waterfallColumn;
@@ -288,11 +291,14 @@
             div.style.padding = "0 " + margin + "px 0 " + (gutter - margin) + "px";
         });
         this._waterfallColumns[0].style.paddingLeft = this._waterfallColumns[this._waterfallColumn - 1].style.paddingRight = 0;
-        this._waterfallColumns[0].style.width = (width  + gutter - margin) + "px";
-        this._waterfallColumns[this._waterfallColumn - 1].style.width = (width  + margin) + "px";
+        this._waterfallColumns[0].style.width = (width + gutter - margin) + "px";
+        this._waterfallColumns[this._waterfallColumn - 1].style.width = (width + margin) + "px";
         this._waterfallColumns[0].style.paddingRight = margin + "px";
         this._waterfallColumns[this._waterfallColumn - 1].style.paddingLeft = (gutter - margin) + "px";
-        this._water.lastIndex = -1;
+        //更新高度信息
+        for(let i = 0; i < this._waterfallColumn; i++) {
+            this._water.height[i] = parseFloat(this._container.css("height", this._waterfallColumns[i]));
+        }
     };
 
     /**
