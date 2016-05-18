@@ -44,9 +44,9 @@ obj.setImage("", {
 |layout|布局类型|Album.LAYOUT.PUZZLE<br />Album.LAYOUT.WATERFALL<br />Album.LAYOUT.BARREL|拼图布局<br />瀑布布局<br />木桶布局|Album.LAYOUT.WATERFALL|
 |fullScreen|点击图片全屏|Album.FULL_SCREEN.NONE<br />Album.FULL_SCREEN.PAGE<br />Album.FULL_SCREEN.WINDOW|禁止全屏<br />页面全屏<br />全屏|Album.FULL_SCREEN.NONE|
 |gutter|图片间距|{x: number, y: number}|x：横向间距<br />y：纵向间距|{x: 0, y: 0}|
-|waterfallColumn|瀑布布局列数|Number|瀑布布局列数|4|
+|waterfallColumn|瀑布布局列数|Number<br />&gt;0|瀑布布局列数|4|
 |barrelHeight|木桶布局高度范围|{min: number, max: number}|min：最小高度<br />max：最大高度||
-|resizeUpdate|容器大小改变监听<br />当容器大小改变时重新计算布局|Number|<=0为不监视|不监视|
+|resizeUpdate|容器大小改变监听<br />当容器大小改变时重新计算布局|Number|&lt;=0为不监视|不监视|
 |imageLoadCallback|所有图片加载完成回调函数|Function|当队列中的图片加载完成后自动调用的函数|undefined|
 
 5. 调用```obj.addImage([]);```追加图片，函数返回追加的图片对象，可对追加的图片设置其他属性。
