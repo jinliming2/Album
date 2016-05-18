@@ -11,21 +11,6 @@
      */
     function Album(id) {
         /**
-         * 布局容器
-         * @type {Container}
-         * @private
-         */
-        this._container = Container(id);
-        /**
-         * 容器尺寸[宽度, 高度]
-         * @type {number[]}
-         * @private
-         */
-        this._containerSize = [0, 0];
-        //容器尺寸
-        this._containerSize[0] = parseFloat(this._container.css("width"));
-        this._containerSize[1] = parseFloat(this._container.css("height"));
-        /**
          * 布局类型
          * @type {{PUZZLE: LAYOUT, WATERFALL: LAYOUT, BARREL: LAYOUT}}
          */
@@ -43,6 +28,21 @@
             PAGE: Symbol('PAGE_FULL_SCREEN'),     //页面内全屏显示
             WINDOW: Symbol('WINDOW_FULL_SCREEN')  //窗口全屏显示
         };
+        /**
+         * 布局容器
+         * @type {Container}
+         * @private
+         */
+        this._container = Container(id);
+        /**
+         * 容器尺寸[宽度, 高度]
+         * @type {number[]}
+         * @private
+         */
+        this._containerSize = [0, 0];
+        //容器尺寸
+        this._containerSize[0] = parseFloat(this._container.css("width"));
+        this._containerSize[1] = parseFloat(this._container.css("height"));
         /**
          * 容器尺寸改变事件监视时钟
          * @type {number}
@@ -102,7 +102,7 @@
                 puzzle.call(this);
                 break;
             case this.LAYOUT.WATERFALL:
-                waterfall();
+                waterfall.call(this);
                 break;
             case this.LAYOUT.BARREL:
                 break;
