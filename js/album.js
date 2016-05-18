@@ -392,7 +392,7 @@
             img.onload = function() {
                 _this._elements.push(img);
                 if(onload instanceof Function) {
-                    onload.call(_this);
+                    onload.call(_this, true);
                 }
                 if(--_this._loading == 0) {
                     if(_this._imageLoadCallback instanceof Function) {
@@ -402,6 +402,9 @@
                 _this._update(CONTROL.Insert);
             };
             img.onerror = function() {
+                if(onload instanceof Function) {
+                    onload.call(_this, false);
+                }
                 if(--_this._loading == 0) {
                     if(_this._imageLoadCallback instanceof Function) {
                         _this._imageLoadCallback.call(_this);
