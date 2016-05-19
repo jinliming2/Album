@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-HanS">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="renderer" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport"
+          content="width=device-width,height=device-height,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+    <meta name="author" content="金黎明,Liming Jin,jinliming2@gmail.com,TianJin China"/>
+    <title>Album</title>
+    <link rel="stylesheet" href="./css/album.min.css"/>
+    <script src="./js/album.js"></script>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        /** 操作面板整体 */
+        #control {
+            background-color: rgba(150, 150, 150, 0.7);
+            width: 650px;
+            position: fixed;
+            z-index: 101;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /** 和操作面板标题 */
+        #control-title {
+            color: white;
+            background-color: blue;
+            padding: 5px;
+            width: 640px;
+            height: 20px;
+            cursor: move;
+        }
+
+        /** 操作面板操作区 */
+        #control-main {
+            overflow: auto;
+            width: 640px;
+            padding: 5px;
+            text-align: center;
+        }
+
+        input {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div id="album" style="width: 100%; height: 100%; overflow-y: auto;"></div>
+<!-- 操作面板 -->
+<div id="control">
+    <div id="control-title">Control 操作面板</div>
+    <div id="control-main">
+        <div>
+            图片源：
+            <input id="A" type="radio" name="source"/><label for="A">LOREMPixel</label>
+            <input id="B" type="radio" name="source" checked="checked"/><label for="B">Place Hold It(Faster)</label>
+        </div>
+        <div>
+            <input id="w" type="number" min="1" placeholder="width" value="520"/>×
+            <input id="h" type="number" min="1" placeholder="height" value="250"/>
+            <button onclick="addImg()">添加图片</button>
+            <button onclick="addRandom()">添加随机大小图片</button>
+        </div>
+        <div>
+            <input id="auto" type="checkbox" checked="checked" onclick="resizeUpdate();"/>
+            <label for="auto">容器尺寸变化自适应</label>
+        </div>
+        <div id="layout">
+            <input id="rPUZZLE" type="radio" name="type"/><label for="rPUZZLE">拼图布局</label>
+            <input id="rWATERFALL" type="radio" name="type" checked="checked"/><label for="rWATERFALL">瀑布布局</label>
+            <input id="rBARREL" type="radio" name="type"/><label for="rBARREL">木桶布局</label>
+        </div>
+        <div id="gutter">
+            设置间隔：
+            <input id="gutterX" type="number" min="0" placeholder="gutterX" value="0"/>
+            <input id="gutterY" type="number" min="0" placeholder="gutterY" value="0"/>
+        </div>
+        <div id="col">
+            列数：<input id="column" type="number" min="1" placeholder="Column" value="4"/>
+        </div>
+        <div id="height">
+            高度范围：
+            <input id="min" type="number" min="0" placeholder="min" value="250">~
+            <input id="max" type="number" min="0" placeholder="max" value="300"/>
+        </div>
+    </div>
+</div>
+<script>
+    let A = document.getElementById("A");
+    let B = document.getElementById("B");
+    let w = document.getElementById("w");
+    let h = document.getElementById("h");
+    let gutter = document.getElementById("gutter");
+    let gutterX = document.getElementById("gutterX");
+    let gutterY = document.getElementById("gutterY");
+    let auto = document.getElementById("auto");
+    let lay = document.getElementById("layout");
+    let rPUZZLE = document.getElementById("rPUZZLE");
+    let rWATERFALL = document.getElementById("rWATERFALL");
+    let rBARREL = document.getElementById("rBARREL");
+    let col = document.getElementById("col");
+    let column = document.getElementById("column");
+    let height = document.getElementById("height");
+    let min = document.getElementById("min");
+    let max = document.getElementById("max");
+    //随机图像
+    let types = [
+        'abstract', 'animals', 'business', 'cats',
+        'city', 'food', 'nightlife', 'fashion',
+        'people', 'nature', 'sports', 'technics',
+        'transport'
+    ];
+    /** 相册操作部分 */
+    let obj = Album("album");  //构造Album对象
+    obj.setImage("", {
+        resizeUpdate: 250
+    });  //初始化
+    let layout = obj.getLayout();
+    gutter.style.display = layout != obj.LAYOUT.PUZZLE ? "block" : "none";
+    col.style.display = layout == obj.LAYOUT.WATERFALL ? "block" : "none";
+    height.style.display = layout == obj.LAYOUT.BARREL ? "block" : "none";
+    lay.addEventListener("click", function() {
+        if(rPUZZLE.checked && layout != obj.LAYOUT.PUZZLE) {
+            layout = obj.LAYOUT.PUZZLE;
+            obj.setLayout(layout);
+        } else if(rBARREL.checked && layout != obj.LAYOUT.BARREL) {
+            layout = obj.LAYOUT.BARREL;
+            obj.setLayout(layout);
+        } else {
+            layout = obj.LAYOUT.WATERFALL;
+            obj.setLayout(layout);
+        }
+        gutter.style.display = layout != obj.LAYOUT.PUZZLE ? "block" : "none";
+        col.style.display = layout == obj.LAYOUT.WATERFALL ? "block" : "none";
+        height.style.display = layout == obj.LAYOUT.BARREL ? "block" : "none";
+    });
+    gutter.addEventListener("change", function() {
+        obj.setGutter(parseInt(gutterX.value), parseInt(gutterY.value));
+    });
+    let resizeUpdate = function() {
+        if(auto.checked) {
+            obj.resizeUpdate(250);
+        } else {
+            obj.resizeUpdate(-1);
+        }
+    };
+    let addImg = function() {
+        let type = Math.floor(types.length * Math.random());
+        if(A.checked) {
+            obj.addImage(`http://lorempixel.com/${w.value}/${h.value}/${types[type]}/Liming%20Jin/`)
+                    .setAttribute("title", `LOREMPixel   ${w.value}x${h.value}`);
+        } else if(B.checked) {
+            let R = Math.floor(239 * Math.random()) + 16;
+            let G = Math.floor(239 * Math.random()) + 16;
+            let B = Math.floor(239 * Math.random()) + 16;
+            let back = R.toString(16) + G.toString(16) + B.toString(16);
+            let fore = (255 - R).toString(16) + (255 - G).toString(16) + (255 - B).toString(16);
+            obj.addImage(`http://placehold.it/${w.value}x${h.value}/${back}/${fore}`)
+                    .setAttribute("title", `Place Hold It   ${w.value}x${h.value}   ${back}/${fore}`);
+        }
+    };
+    let addRandom = function() {
+        w.value = Math.round(330 * Math.random()) + 470;
+        h.value = Math.round(330 * Math.random()) + 270;
+        addImg();
+    };
+    col.addEventListener("change", function() {
+        obj.setWaterfallColumn(parseInt(column.value));
+    });
+    height.addEventListener("change", function() {
+        obj.setBarrelHeight(parseInt(min.value), parseInt(max.value));
+    });
+</script>
+<script>
+    /**
+     * 操作面板拖动
+     */
+    (function() {
+        //获取对象元素
+        var control = document.getElementById("control");
+        var title = document.getElementById("control-title");
+        //初始位置
+        control.style.left = 0;
+        control.style.top = (window.innerHeight - control.offsetHeight) + "px";
+        var draggingControl = false;
+        var start = [0, 0];
+        var position = [
+            control.style.left.substr(0, control.style.left.length - 2) - 0,
+            control.style.top.substr(0, control.style.top.length - 2) - 0
+        ];
+        //绑定事件
+        title.addEventListener("mousedown", function(e) {  //鼠标按下事件
+            start[0] = e.clientX - position[0];
+            start[1] = e.clientY - position[1];
+            draggingControl = true;
+        });
+        addEventListener("mouseup", function() {  //鼠标抬起事件
+            draggingControl = false;
+        });
+        addEventListener("mousemove", function(e) {  //鼠标移动事件
+            if(draggingControl) {
+                position[0] = e.clientX - start[0];
+                position[1] = e.clientY - start[1];
+                if(position[0] > window.innerWidth - control.offsetWidth) {
+                    position[0] = window.innerWidth - control.offsetWidth;
+                }
+                if(position[0] < 0) {
+                    position[0] = 0;
+                }
+                if(position[1] > window.innerHeight - control.offsetHeight) {
+                    position[1] = window.innerHeight - control.offsetHeight;
+                }
+                if(position[1] < 0) {
+                    position[1] = 0;
+                }
+                control.style.left = position[0] + "px";
+                control.style.top = position[1] + "px";
+            }
+        });
+    })();
+</script>
+</body>
+</html>
