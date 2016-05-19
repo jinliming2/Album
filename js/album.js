@@ -293,17 +293,14 @@
             .removeClass("puzzle-5")
             .removeClass("puzzle-6")
             .addClass("waterfall");
-        //清空容器
-        if(this._water.height.length != this._waterfallColumn) {
-            this._container.clearChildren();
-            this._waterfallColumns = [];
-            this._water.height = [];
-            //重新布局
-            for(let i = 0; i < this._waterfallColumn; i++) {
-                this._waterfallColumns.push(this._container.appendDiv());
-            }
-            this._water.lastIndex = -1;
+        this._container.clearChildren();
+        this._waterfallColumns = [];
+        this._water.height = [];
+        //重新布局
+        for(let i = 0; i < this._waterfallColumn; i++) {
+            this._waterfallColumns.push(this._container.appendDiv());
         }
+        this._water.lastIndex = -1;
         //重新布局
         let gutter = this._gutter[0];
         let margin = Math.round(this._gutter[0] / 2);
@@ -382,10 +379,14 @@
 
             }
             this._barrel.lastIndex++;
+            let record = [this._elements[this._barrel.lastIndex].width, this._elements[this._barrel.lastIndex].height];
             let width = this._elements[this._barrel.lastIndex].width * this._barrel.height / this._elements[this._barrel.lastIndex].height;
             let div = this._container.appendImage(this._elements[this._barrel.lastIndex], this._barrel.currentLine);
             this._barrel.commit += width;
             div.style.marginRight = this._gutter[0] + "px";
+            div.dataset.width = record[0];
+            div.dataset.height = record[1];
+            div.style.width = width + "px";
             if(this._barrel.commit > this._barrel.minWidth) {
                 div.style.marginRight = "0";
                 let h = this._containerSize[0] * this._barrel.height / this._barrel.commit;
@@ -393,9 +394,8 @@
                 let divs = this._barrel.currentLine.getElementsByTagName("div");
                 let w = 0;
                 for(let i = 0; i < divs.length; i++) {
-                    let img = divs[i].getElementsByTagName("img")[0];
                     if(i < divs.length - 1) {
-                        let width = Math.floor(img.width * h / img.height);
+                        let width = Math.floor(divs[i].dataset.width * h / divs[i].dataset.height);
                         w += width + this._gutter[0];
                         divs[i].style.width = width + "px";
                     } else {
