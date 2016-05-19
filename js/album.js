@@ -101,11 +101,24 @@
             height: []
         };
         /**
+         * 木桶布局配置
+         * @type {{lastIndex: number, height: number, minWidth: number, maxWidth: number, currentLine: HTMLElement, commit: number}}
+         * @private
+         */
+        this._barrel = {
+            lastIndex: -1,
+            height: 0,
+            minWidth: 0,
+            maxWidth: 0,
+            currentLine: null,
+            commit: 0
+        };
+        /**
          * 木桶布局高度限制
          * @type {number[]}
          * @private
          */
-        this._barrelHeight = [0, 0];
+        this._barrelHeight = [250, 300];
         /**
          * 正在加载的图片数
          * @type {number}
@@ -146,6 +159,15 @@
                 }
                 break;
             case this.LAYOUT.BARREL:
+                //noinspection FallThroughInSwitchStatementJS
+                switch(control) {
+                    case CONTROL.Delete:
+                    case CONTROL.Update:
+                        this._barrelReset();
+                    case CONTROL.Insert:
+                        this._barrelInsert();
+                        break;
+                }
                 break;
         }
     };
@@ -285,7 +307,7 @@
         //重新布局
         let gutter = this._gutter[0];
         let margin = Math.round(this._gutter[0] / 2);
-        let width = (parseInt(this._container.css("width")) - gutter * (this._waterfallColumn - 1)) / this._waterfallColumn;
+        let width = (parseInt(this._containerSize[0]) - gutter * (this._waterfallColumn - 1)) / this._waterfallColumn;
         this._waterfallColumns.forEach(function(div) {
             div.style.width = (width + gutter) + "px";
             div.style.padding = "0 " + margin + "px 0 " + (gutter - margin) + "px";
@@ -317,6 +339,74 @@
             this._container.appendImage(this._elements[this._water.lastIndex], this._waterfallColumns[min])
                 .style.marginBottom = this._gutter[1] + "px";
             this._water.height[min] = parseFloat(this._container.css("height", this._waterfallColumns[min]));
+        }
+    };
+
+    /**
+     * 木桶布局重置
+     * @private
+     */
+    Album.prototype._barrelReset = function() {
+        //设置木桶布局
+        this._container
+            .removeClass("puzzle")
+            .removeClass("waterfall")
+            .removeClass("puzzle-1")
+            .removeClass("puzzle-2")
+            .removeClass("puzzle-3")
+            .removeClass("puzzle-4")
+            .removeClass("puzzle-5")
+            .removeClass("puzzle-6")
+            .addClass("barrel");
+        //清空容器
+        this._container.clearChildren();
+        this._barrel.height = (this._barrelHeight[0] + this._barrelHeight[1]) / 2;
+        this._barrel.minWidth = this._containerSize[0] * this._barrel.height / this._barrelHeight[1];
+        this._barrel.maxWidth = this._containerSize[0] * this._barrel.height / this._barrelHeight[0];
+        this._barrel.currentLine = null;
+        this._barrel.lastIndex = -1;
+        this._barrel.total = [];
+        this._barrel.commit = 0;
+    };
+
+    /**
+     * 木桶布局追加图片
+     * @private
+     */
+    Album.prototype._barrelInsert = function() {
+        while(this._barrel.lastIndex < this._elements.length - 1) {
+            if(this._barrel.currentLine == null) {
+                this._barrel.currentLine = this._container.appendDiv();
+                this._barrel.currentLine.style.height = this._barrel.height + "px";
+                this._barrel.currentLine.style.marginBottom = this._gutter[1] + "px";
+
+            }
+            this._barrel.lastIndex++;
+            let width = this._elements[this._barrel.lastIndex].width * this._barrel.height / this._elements[this._barrel.lastIndex].height;
+            let div = this._container.appendImage(this._elements[this._barrel.lastIndex], this._barrel.currentLine);
+            this._barrel.commit += width;
+            div.style.marginRight = this._gutter[0] + "px";
+            if(this._barrel.commit > this._barrel.minWidth) {
+                div.style.marginRight = "0";
+                let h = this._containerSize[0] * this._barrel.height / this._barrel.commit;
+                this._barrel.currentLine.style.height = h + "px";
+                let divs = this._barrel.currentLine.getElementsByTagName("div");
+                let w = 0;
+                for(let i = 0; i < divs.length; i++) {
+                    let img = divs[i].getElementsByTagName("img")[0];
+                    if(i < divs.length - 1) {
+                        let width = Math.floor(img.width * h / img.height);
+                        w += width + this._gutter[0];
+                        divs[i].style.width = width + "px";
+                    } else {
+                        divs[i].style.width = (this._containerSize[0] - w) + "px";
+                    }
+                }
+                this._barrel.currentLine = null;
+                this._barrel.commit = 0;
+            } else {
+                this._barrel.commit += this._gutter[0];
+            }
         }
     };
 
@@ -560,7 +650,11 @@
         if(!Number.isInteger(min) || !Number.isInteger(max)) {
             return;
         }
-        this._barrelHeight = [min, max];
+        if(max >= min) {
+            this._barrelHeight = [min, max];
+        } else {
+            this._barrelHeight = [max, min];
+        }
         this._update(CONTROL.Update);
     };
 
