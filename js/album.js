@@ -190,8 +190,10 @@
         });
         image.src = _elements[index].src;
         if(_elements[index].naturalWidth / _elements[index].naturalHeight >= border) {
+            image.classList.remove("AlbumFullScreenImageHeight");
             image.classList.add("AlbumFullScreenImageWidth");
         } else {
+            image.classList.remove("AlbumFullScreenImageWidth");
             image.classList.add("AlbumFullScreenImageHeight");
         }
         //显示缩略图
