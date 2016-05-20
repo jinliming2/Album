@@ -10,13 +10,15 @@
 
 一个使用JS编写的相册库，使用了ES2015+CSS3
 
+[Demo](http://772807886.github.io/51/index.html)
+
 ### 写在前面
 这个类库的开始就是以ES6+CSS3为基础的，不对旧版本浏览器进行兼容，在新版本的Chrome和Firefox均可以直接使用。
 
 如果需要对旧版浏览器进行兼容，可以自行使用[Babel](https://babeljs.io/repl/)转换为ES5后使用。
 
 ## Usage 使用方法
-1. 包含album.min.css（或是未压缩版：album.css）和album.js。
+1. 包含album.min.css（或是未压缩版：album.css）和album.min.js（或是未压缩版：album.js）。
 ```html
 <link rel="stylesheet" href="./css/album.min.css" />
 <script src="./js/album.js"></script>

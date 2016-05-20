@@ -1,5 +1,7 @@
 /**
+ * Album - https://github.com/772807886/Album
  * Created by Liming on 2016/5/5.
+ * Version: 1.1
  */
 "use strict";
 (function(window) {
