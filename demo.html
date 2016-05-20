@@ -149,7 +149,7 @@
         } else if(rBARREL.checked && layout != obj.LAYOUT.BARREL) {
             layout = obj.LAYOUT.BARREL;
             obj.setLayout(layout);
-        } else {
+        } else if(rWATERFALL.checked && layout != obj.LAYOUT.WATERFALL) {
             layout = obj.LAYOUT.WATERFALL;
             obj.setLayout(layout);
         }
@@ -198,7 +198,7 @@
             obj.setFullScreen(obj.FULL_SCREEN.NONE);
         } else if(rPAGE.checked) {
             obj.setFullScreen(obj.FULL_SCREEN.PAGE);
-        } else {
+        } else if(rWINDOW.checked) {
             obj.setFullScreen(obj.FULL_SCREEN.WINDOW);
         }
     });
