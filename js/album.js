@@ -128,6 +128,13 @@
     }
 
     /**
+     * 自增id
+     * @type {number}
+     * @private
+     */
+    let _autoI = 0;
+
+    /**
      * 操作
      * @type {{Insert: Symbol, Delete: Symbol, Update: Symbol}}
      */
@@ -135,6 +142,98 @@
         Insert: Symbol("Insert"),
         Delete: Symbol("Delete"),
         Update: Symbol("Update")
+    };
+
+    /**
+     * 全屏DIV
+     * @type {HTMLElement|null}
+     */
+    let FullScreenDiv = null;
+
+    /**
+     * 当前this指针
+     * @type {Album}
+     * @private
+     */
+    let _that = null;
+
+    /**
+     * 全屏图片集合
+     * @type {Image[]}
+     * @private
+     */
+    let _elements = null;
+
+    /**
+     * 全屏配置
+     * @param target 目标图片
+     * @constructor
+     */
+    let FullScreenSetup = function(target) {
+        let imageDiv = Container(document.getElementsByClassName("AlbumFullScreenImage")[0]);
+        let border = parseFloat(imageDiv.css("width")) / parseFloat(imageDiv.css("height"));
+        let image = document.getElementById("AlbumFullScreenImage");
+        //缩略图们
+        let display = [];
+        let num = _elements.length;
+        if(num > 7) {
+            num = 7;
+        }
+        for(let i = 1; i <= num; i++) {
+            display.push(document.getElementById("AlbumFullScreenDisplay" + i));
+        }
+        //主图
+        let index = _elements.findIndex((img) => {
+            return img.dataset.info == target.dataset.info;
+        });
+        image.src = _elements[index].src;
+        if(_elements[index].naturalWidth / _elements[index].naturalHeight >= border) {
+            image.classList.add("AlbumFullScreenImageWidth");
+        } else {
+            image.classList.add("AlbumFullScreenImageHeight");
+        }
+        //显示缩略图
+        let imageIndex = index;
+        imageIndex += _elements.length - index > 3 ? 4 : _elements.length - index;
+        for(let i = num; i > 0 && imageIndex > 0; i--, imageIndex--){}
+        for(let i = 0; i < num; i++, imageIndex++) {
+            display[i].src = _elements[imageIndex].src;
+            if(imageIndex == index) {
+                display[i].className = "AlbumFullScreenDisplaySelected";
+            }
+        }
+    };
+
+    /**
+     * 全屏浮层点击事件
+     * @param e
+     * @constructor
+     */
+    let FullScreenClick = function(e) {
+        //关闭
+        if(e.target.classList.contains("AlbumFullScreenCloseButton")) {
+            //退出全屏
+            if(_that._fullScreen == _that.FULL_SCREEN.WINDOW) {
+                //noinspection JSUnresolvedVariable
+                if(document.exitFullscreen) {
+                    //noinspection JSUnresolvedFunction
+                    document.exitFullscreen();
+                } else { //noinspection JSUnresolvedVariable
+                    if(document.mozCancelFullScreen) {
+                        //noinspection JSUnresolvedFunction
+                        document.mozCancelFullScreen();
+                    } else { //noinspection JSUnresolvedVariable
+                        if(document.webkitExitFullscreen) {
+                            //noinspection JSUnresolvedFunction
+                            document.webkitExitFullscreen();
+                        }
+                    }
+                }
+            }
+            //删除浮层
+            document.body.removeChild(FullScreenDiv);
+            FullScreenDiv = null;
+        }
     };
 
     /**
@@ -459,6 +558,78 @@
         if(Number.isInteger(option.resizeUpdate)) {
             this.resizeUpdate(option.resizeUpdate);
         }
+        //全屏事件绑定
+        let _this = this;
+        this._container.getContainer().addEventListener("click", function(e) {
+            _that = _this;
+            if(e.target.classList.contains("AlbumImage")) {
+                if(_this._fullScreen == _this.FULL_SCREEN.NONE) {
+                    return;
+                }
+                if(FullScreenDiv == null) {
+                    FullScreenDiv = document.createElement("div");
+                    FullScreenDiv.className = "AlbumFullScreen";
+                    let div;
+                    //关闭按钮
+                    div = document.createElement("div");
+                    div.className = "AlbumFullScreenClose";
+                    div.innerHTML = `<svg class="AlbumFullScreenCloseButton" width="200" height="200" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g class="AlbumFullScreenCloseButton" transform="scale(0.1953125, 0.1953125)">
+        <path class="AlbumFullScreenCloseButton" d="M512 6.472C233.891 6.472 8.471 231.905 8.471 510c0 278.108 225.42 503.528 503.529 503.528 278.079 0 503.528-225.42 503.528-503.528C1015.529 231.905 790.079 6.472 512 6.472zM650.489 542.395l130.65 130.68c18.387 18.388 18.387 48.457 0 66.815l-37.223 37.222c-18.357 18.388-48.428 18.388-66.815 0l-130.68-130.68c-18.358-18.357-48.398-18.357-66.756 0l-130.71 130.68c-18.358 18.388-48.428 18.388-66.756 0l-37.252-37.222c-18.358-18.358-18.358-48.428 0-66.815l130.68-130.68c18.358-18.358 18.358-48.413 0-66.771l-130.68-130.694c-18.388-18.373-18.388-48.428 0-66.786l37.222-37.236c18.358-18.373 48.428-18.373 66.786 0l130.71 130.694c18.357 18.358 48.397 18.358 66.756 0l130.71-130.694c18.357-18.373 48.428-18.373 66.785 0l37.252 37.236c18.357 18.358 18.357 48.413 0 66.786l-130.68 130.694C632.101 493.981 632.101 524.036 650.489 542.395z"></path>
+    </g>
+</svg>`;
+                    FullScreenDiv.appendChild(div);
+                    //图片展示
+                    div = document.createElement("div");
+                    div.className = "AlbumFullScreenImage";
+                    let img;
+                    img = document.createElement("img");
+                    img.id = "AlbumFullScreenImage";
+                    div.appendChild(img);
+                    FullScreenDiv.appendChild(div);
+                    //缩略图
+                    div = document.createElement("div");
+                    div.className = "AlbumFullScreenDisplay";
+                    _elements = _this._elements;
+                    let num = _this._elements.length;
+                    if(num > 7) {
+                        num = 7;
+                    }
+                    for(let i = 1; i <= num; i++) {
+                        img = document.createElement("img");
+                        img.id = "AlbumFullScreenDisplay" + i;
+                        div.appendChild(img);
+                    }
+                    FullScreenDiv.appendChild(div);
+                }
+                document.body.appendChild(FullScreenDiv);
+                if(_this._fullScreen == _this.FULL_SCREEN.WINDOW) {
+                    //全屏
+                    //noinspection JSUnresolvedVariable
+                    if(FullScreenDiv.requestFullscreen) {
+                        //noinspection JSUnresolvedFunction
+                        FullScreenDiv.requestFullscreen();
+                    } else { //noinspection JSUnresolvedVariable
+                        if(FullScreenDiv.mozRequestFullScreen) {
+                            //noinspection JSUnresolvedFunction
+                            FullScreenDiv.mozRequestFullScreen();
+                        } else { //noinspection JSUnresolvedVariable
+                            if(FullScreenDiv.webkitRequestFullscreen) {
+                                //noinspection JSUnresolvedFunction
+                                FullScreenDiv.webkitRequestFullscreen();
+                            } else { //noinspection JSUnresolvedVariable
+                                if(FullScreenDiv.msRequestFullscreen) {
+                                    //noinspection JSUnresolvedFunction
+                                    FullScreenDiv.msRequestFullscreen();
+                                }
+                            }
+                        }
+                    }
+                }
+                FullScreenDiv.addEventListener("click", FullScreenClick, true);
+                FullScreenSetup(e.target);
+            }
+        }, true);
     };
 
     /**
@@ -485,6 +656,7 @@
         for(let i of image) {
             this._loading++;
             let img = new Image();
+            img.classList.add("AlbumImage");
             img.onload = function() {
                 _this._elements.push(img);
                 if(onload instanceof Function) {
@@ -508,6 +680,7 @@
                 }
             };
             img.src = i;
+            img.dataset.info = _autoI++;
             _ret.push(img);
         }
         return _ret.length == 1 ? _ret[0] : _ret;
@@ -824,6 +997,14 @@
             } else {
                 return this._getProperty(property);
             }
+        };
+
+        /**
+         * 取当前容器对象
+         * @returns {HTMLElement} 容器对象
+         */
+        Container.prototype.getContainer = function() {
+            return this._container;
         };
 
         return new Container(id);

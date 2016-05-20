@@ -163,3 +163,86 @@
     height: 100%;
     width: 100%;
 }
+
+.AlbumFullScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 100;
+}
+
+.AlbumFullScreenClose {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+.AlbumFullScreenClose svg {
+    width: 38px;
+    height: 38px;
+    fill: gray;
+    -webkit-transition: linear 0.5s;
+    -moz-transition: linear 0.5s;
+    -o-transition: linear 0.5s;
+    transition: linear 0.5s;
+}
+
+.AlbumFullScreenClose:hover svg {
+    fill: red;
+    -webkit-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+}
+
+.AlbumFullScreenImage {
+    width: 100%;
+    height: calc(100% - 200px);
+    overflow: hidden;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -webkit-align-items: center;
+    align-items: center;
+}
+
+.AlbumFullScreenImageHeight {
+    height: 100%;
+}
+
+.AlbumFullScreenImageWidth {
+    width: 100%;
+}
+
+.AlbumFullScreenDisplay {
+    width: 100%;
+    height: 200px;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-flow: row nowrap;
+    flex-flow: row nowrap;
+    -webkit-justify-content: space-around;
+    justify-content: space-around;
+    -webkit-align-items: center;
+    align-items: center;
+}
+
+.AlbumFullScreenDisplay img {
+    max-height: calc(100% - 10px);
+    width: 250px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.AlbumFullScreenDisplaySelected {
+    max-height: calc(100% - 10px);
+    width: 300px;
+    margin: 5px;
+    outline: solid 5px gold;
+}
