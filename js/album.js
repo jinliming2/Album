@@ -198,9 +198,8 @@
         for(let i = num; i > 0 && imageIndex > 0; i--, imageIndex--){}
         for(let i = 0; i < num; i++, imageIndex++) {
             display[i].src = _elements[imageIndex].src;
-            if(imageIndex == index) {
-                display[i].className = "AlbumFullScreenDisplaySelected";
-            }
+            display[i].dataset.info = _elements[imageIndex].dataset.info;
+            display[i].className = imageIndex == index ? "AlbumFullScreenDisplaySelected" : "AlbumFullScreenDisplayImage";
         }
     };
 
@@ -210,10 +209,12 @@
      * @constructor
      */
     let FullScreenClick = function(e) {
-        //关闭
-        if(e.target.classList.contains("AlbumFullScreenCloseButton")) {
+        let classList = e.target.classList;
+        if(classList.contains("AlbumFullScreenCloseButton")) {  //关闭
             //退出全屏
-            if(_that._fullScreen == _that.FULL_SCREEN.WINDOW) {
+            //noinspection JSUnresolvedVariable
+            let fullscreenEnabled = document.fullscreenEnabled || document.mozFullScreenEnabled || document.webkitFullscreenEnabled;
+            if(fullscreenEnabled) {
                 //noinspection JSUnresolvedVariable
                 if(document.exitFullscreen) {
                     //noinspection JSUnresolvedFunction
@@ -233,6 +234,8 @@
             //删除浮层
             document.body.removeChild(FullScreenDiv);
             FullScreenDiv = null;
+        } else if(classList.contains("AlbumFullScreenDisplayImage")) {  //预览切换
+            FullScreenSetup(e.target);
         }
     };
 

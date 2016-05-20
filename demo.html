@@ -91,6 +91,12 @@
             <input id="min" type="number" min="0" placeholder="min" value="250">~
             <input id="max" type="number" min="0" placeholder="max" value="300"/>
         </div>
+        <div id="fullScreen">
+            点击图片放大：
+            <input id="rNONE" type="radio" name="fullScreen" checked="checked"/><label for="rNONE">关闭</label>
+            <input id="rPAGE" type="radio" name="fullScreen"/><label for="rPAGE">窗口全屏</label>
+            <input id="rWINDOW" type="radio" name="fullScreen"/><label for="rWINDOW">全屏</label>
+        </div>
     </div>
 </div>
 <script>
@@ -111,6 +117,10 @@
     let height = document.getElementById("height");
     let min = document.getElementById("min");
     let max = document.getElementById("max");
+    let fullScreen = document.getElementById("fullScreen");
+    let rNONE = document.getElementById("rNONE");
+    let rPAGE = document.getElementById("rPAGE");
+    let rWINDOW = document.getElementById("rWINDOW");
     //随机图像
     let types = [
         'abstract', 'animals', 'business', 'cats',
@@ -177,6 +187,15 @@
     });
     height.addEventListener("change", function() {
         obj.setBarrelHeight(parseInt(min.value), parseInt(max.value));
+    });
+    fullScreen.addEventListener("click", function() {
+        if(rNONE.checked) {
+            obj.setFullScreen(obj.FULL_SCREEN.NONE);
+        } else if(rPAGE.checked) {
+            obj.setFullScreen(obj.FULL_SCREEN.PAGE);
+        } else {
+            obj.setFullScreen(obj.FULL_SCREEN.WINDOW);
+        }
     });
 </script>
 <script>
