@@ -1,7 +1,7 @@
 /**
  * Album - https://github.com/772807886/Album
  * Created by Liming on 2016/5/5.
- * Version: 1.1
+ * Version: 1.2
  */
 "use strict";
 (function(window) {
@@ -30,6 +30,11 @@
             PAGE: Symbol('PAGE_FULL_SCREEN'),     //页面内全屏显示
             WINDOW: Symbol('WINDOW_FULL_SCREEN')  //窗口全屏显示
         };
+        /**
+         * 瀑布布局自动列数常量
+         * @type {WATERFALL_AUTO}
+         */
+        this.WATERFALL_AUTO = Symbol('AUTO');
         /**
          * 布局容器
          * @type {Container}
@@ -83,7 +88,7 @@
         this._fullScreen = this.FULL_SCREEN.NONE;
         /**
          * 瀑布布局列数
-         * @type {number}
+         * @type {number|WATERFALL_AUTO}
          * @private
          */
         this._waterfallColumn = 4;
@@ -127,6 +132,12 @@
          * @private
          */
         this._loading = 0;
+        /**
+         * 瀑布布局自动计算列数最小列宽
+         * @type {number} 最小列宽
+         * @private
+         */
+        this._waterfallAutoColumn = 200;
     }
 
     /**
@@ -141,9 +152,9 @@
      * @type {{Insert: Symbol, Delete: Symbol, Update: Symbol}}
      */
     let CONTROL = {
-        Insert: Symbol("Insert"),
-        Delete: Symbol("Delete"),
-        Update: Symbol("Update")
+        Insert: Symbol("Insert"),  //插入
+        Delete: Symbol("Delete"),  //删除
+        Update: Symbol("Update")   //普通更新
     };
 
     /**
@@ -402,26 +413,36 @@
         this._container.clearChildren();
         this._waterfallColumns = [];
         this._water.height = [];
+        //列数
+        let _waterC;
+        if(this._waterfallColumn === this.WATERFALL_AUTO) {
+            _waterC = Math.floor(parseFloat(this._container.css("width")) / this._waterfallAutoColumn);
+        } else {
+            _waterC = this._waterfallColumn;
+        }
+        if(_waterC <= 0) {
+            _waterC = 1;
+        }
         //重新布局
-        for(let i = 0; i < this._waterfallColumn; i++) {
+        for(let i = 0; i < _waterC; i++) {
             this._waterfallColumns.push(this._container.appendDiv());
         }
         this._water.lastIndex = -1;
         //重新布局
         let gutter = this._gutter[0];
         let margin = Math.round(this._gutter[0] / 2);
-        let width = (parseInt(this._containerSize[0]) - gutter * (this._waterfallColumn - 1)) / this._waterfallColumn;
+        let width = (parseInt(this._containerSize[0]) - gutter * (_waterC - 1)) / _waterC;
         this._waterfallColumns.forEach(function(div) {
             div.style.width = (width + gutter) + "px";
             div.style.padding = "0 " + margin + "px 0 " + (gutter - margin) + "px";
         });
-        this._waterfallColumns[0].style.paddingLeft = this._waterfallColumns[this._waterfallColumn - 1].style.paddingRight = 0;
+        this._waterfallColumns[0].style.paddingLeft = this._waterfallColumns[_waterC - 1].style.paddingRight = 0;
         this._waterfallColumns[0].style.width = (width + gutter - margin) + "px";
-        this._waterfallColumns[this._waterfallColumn - 1].style.width = (width + margin) + "px";
+        this._waterfallColumns[_waterC - 1].style.width = (width + margin) + "px";
         this._waterfallColumns[0].style.paddingRight = margin + "px";
-        this._waterfallColumns[this._waterfallColumn - 1].style.paddingLeft = (gutter - margin) + "px";
+        this._waterfallColumns[_waterC - 1].style.paddingLeft = (gutter - margin) + "px";
         //更新高度信息
-        for(let i = 0; i < this._waterfallColumn; i++) {
+        for(let i = 0; i < _waterC; i++) {
             this._water.height[i] = parseFloat(this._container.css("height", this._waterfallColumns[i]));
         }
     };
@@ -431,10 +452,16 @@
      * @private
      */
     Album.prototype._waterfallInsert = function() {
+        let _waterC;
+        if(this._waterfallColumn === this.WATERFALL_AUTO) {
+            _waterC = Math.floor(parseFloat(this._container.css("width")) / this._waterfallAutoColumn);
+        } else {
+            _waterC = this._waterfallColumn;
+        }
         while(this._water.lastIndex < this._elements.length - 1) {
             this._water.lastIndex++;
             let min = 0;
-            for(let i = 0; i < this._waterfallColumn; i++) {
+            for(let i = 0; i < _waterC; i++) {
                 if(this._water.height[i] < this._water.height[min]) {
                     min = i;
                 }
@@ -525,7 +552,8 @@
      *   layout?: LAYOUT,
      *   fullScreen?: FULL_SCREEN,
      *   gutter?: {x: number, y: number},
-     *   waterfallColumn?: Number,
+     *   waterfallColumn?: Number|WATERFALL_AUTO,
+     *   waterfallAutoMinWidth?: Number,
      *   barrelHeight?: {min: number, max: number},
      *   resizeUpdate?: Number,
      *   imageLoadCallback?: Function
@@ -546,8 +574,12 @@
             this.setGutter(option.gutter.x, option.gutter.y);
         }
         //瀑布布局列数
-        if(Number.isInteger(option.waterfallColumn)) {
+        if(option.waterfallColumn === this.WATERFALL_AUTO || Number.isInteger(option.waterfallColumn)) {
             this.setWaterfallColumn(option.waterfallColumn);
+        }
+        //瀑布布局自动列数最小列宽
+        if(Number.isInteger(option.waterfallAutoMinWidth)) {
+            this.setWaterfallAutoMinWidth(option.waterfallAutoMinWidth);
         }
         //木桶模式每行高度
         if(option.barrelHeight) {
@@ -801,16 +833,38 @@
 
     /**
      * 设置瀑布布局列数
-     * @param column 列数
+     * @param {number|WATERFALL_AUTO} column 列数
      * @return {Boolean}
      */
     Album.prototype.setWaterfallColumn = function(column) {
-        if(Number.isInteger(column) && column > 0) {
+        if(column === this.WATERFALL_AUTO || Number.isInteger(column) && column > 0) {
             this._waterfallColumn = column;
             this._update(CONTROL.Update);
             return true;
         }
         return false;
+    };
+
+    /**
+     * 设置瀑布布局下自动列数计算最小宽度
+     * @param {number} width 最小宽度
+     * @returns {boolean}
+     */
+    Album.prototype.setWaterfallAutoMinWidth = function (width) {
+        if(Number.isInteger(width) && width > 0) {
+            this._waterfallAutoColumn = width;
+            this._update(CONTROL.Update);
+            return true;
+        }
+        return false;
+    };
+
+    /**
+     * 获取瀑布布局下自动列数最小宽度
+     * @returns {number}
+     */
+    Album.prototype.getWaterfallAutoMinWidth = function () {
+        return this._waterfallAutoColumn;
     };
 
     /**

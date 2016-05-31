@@ -1,7 +1,7 @@
 <!--
 - Album - https://github.com/772807886/Album
 - Created by Liming on 2016/5/5.
-- Version: 1.1
+- Version: 1.2
 -->
 <!DOCTYPE html>
 <html lang="zh-HanS">
@@ -14,7 +14,7 @@
     <meta name="author" content="金黎明,Liming Jin,jinliming2@gmail.com,TianJin China"/>
     <title>Album</title>
     <link rel="stylesheet" href="./css/album.min.css"/>
-    <script src="./js/album.min.js"></script>
+    <script src="./js/album.js"></script>
     <style>
         html, body {
             width: 100%;
@@ -61,7 +61,7 @@
 <div id="album" style="width: 100%; height: 100%; overflow-y: auto;"></div>
 <!-- 操作面板 -->
 <div id="control">
-    <div id="control-title">Control 操作面板 Library Version: 1.1</div>
+    <div id="control-title">Control 操作面板 Library Version: 1.2</div>
     <div id="control-main">
         <div>
             图片源：
@@ -89,7 +89,11 @@
             <input id="gutterY" type="number" min="0" placeholder="gutterY" value="0"/>
         </div>
         <div id="col">
-            列数：<input id="column" type="number" min="1" placeholder="Column" value="4"/>
+            列数：<input id="fixed" type="radio" name="column" checked="checked"/><label for="fixed">固定列数</label>
+            <input id="autoColumn" type="radio" name="column"/><label for="autoColumn">自动列数</label>
+            <br/>
+            <span id="columnText">列数：</span>
+            <input id="column" type="number" min="1" placeholder="Column" value="4"/>
         </div>
         <div id="height">
             高度范围：
@@ -126,6 +130,9 @@
     let rNONE = document.getElementById("rNONE");
     let rPAGE = document.getElementById("rPAGE");
     let rWINDOW = document.getElementById("rWINDOW");
+    let fixed = document.getElementById("fixed");
+    let autoColumn = document.getElementById("autoColumn");
+    let columnText = document.getElementById("columnText");
     //随机图像
     let types = [
         'abstract', 'animals', 'business', 'cats',
@@ -188,7 +195,25 @@
         addImg();
     };
     col.addEventListener("change", function() {
-        obj.setWaterfallColumn(parseInt(column.value));
+        if(fixed.checked) {
+            obj.setWaterfallColumn(parseInt(column.value));
+        } else if(autoColumn.checked) {
+            obj.setWaterfallColumn(obj.WATERFALL_AUTO);
+            obj.setWaterfallAutoMinWidth(parseInt(column.value));
+        }
+    });
+    col.addEventListener("click", function (e) {
+        if(e.target == fixed) {
+            if(fixed.checked) {
+                columnText.innerHTML = "列数：";
+                column.value = 4;
+            }
+        } else if(e.target == autoColumn) {
+            if(autoColumn.checked) {
+                columnText.innerHTML = "最小列宽：";
+                column.value = 200;
+            }
+        }
     });
     height.addEventListener("change", function() {
         obj.setBarrelHeight(parseInt(min.value), parseInt(max.value));
