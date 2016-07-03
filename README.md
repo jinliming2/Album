@@ -14,7 +14,7 @@
 
 一个使用JS编写的相册库，使用了ES2015+CSS3
 
-[Demo](http://772807886.github.io/51/index.html)
+[Demo](http://772807886.github.io/Album/demo.html)
 
 ### 写在前面
 这个类库的开始就是以ES6+CSS3为基础的，不对旧版本浏览器进行兼容，在新版本的Chrome和Firefox均可以直接使用。
