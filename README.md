@@ -1,5 +1,5 @@
 # Album
-[![Developing](https://img.shields.io/badge/Album-developing-yellow.svg)](https://github.com/772807886/Album)
+[![Developing](https://img.shields.io/badge/Album-tested-4CC61E.svg)](https://github.com/772807886/Album)
 [![GitHub license](https://img.shields.io/badge/license-AGPL-blue.svg)](https://raw.githubusercontent.com/772807886/Album/master/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/772807886/Album.svg)](https://github.com/772807886/Album/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/772807886/Album.svg)](https://github.com/772807886/Album/network)
