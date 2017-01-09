@@ -35,6 +35,7 @@
     margin-left: -33.333%;
     -webkit-clip-path: polygon(50% 0, 100% 0, 100% 100%, 0 100%);
     clip-path: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMCIgaGVpZ2h0PSIwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogICAgPGNsaXBQYXRoIGlkPSJjbGlwIiBjbGlwUGF0aFVuaXRzPSJvYmplY3RCb3VuZGluZ0JveCI+CiAgICAgICAgPHBvbHlnb24gcG9pbnRzPSIwLjUgMCwxIDAsMSAxLDAgMSI+CiAgICAgICAgPC9wb2x5Z29uPgogICAgPC9jbGlwUGF0aD4KPC9zdmc+#clip);
+    clip-path: polygon(50% 0, 100% 0, 100% 100%, 0 100%);
 }
 
 .puzzle-3 > div {
